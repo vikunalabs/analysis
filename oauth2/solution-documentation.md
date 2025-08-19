@@ -32,8 +32,8 @@
 5. Auth Server:
    - Exchanges code for Google ID token
    - Validates Google's JWT
-   - Issues own short-lived JWT with user claims
-   - Stores this JWT in an `HttpOnly + Secure + SameSite`=`Lax` cookie.
+   - Issues a short-lived JWT with user claims, along with a long-lived JWT token.
+   - Stores this JWT in an `HttpOnly + Secure + SameSite`=`Lax` cookie. Each is to be stored in a separate? ``HttpOnly` cookie.
 
 ### 2. API Access Flow
 1. SPA makes a request to the Resource Server (e.g., GET /api/data)
@@ -44,15 +44,16 @@
    - Checks standard claims (exp, iss, aud)
    - If valid, the Resource Server processes the request
    - If invalid (tampered), it returns 401 Unauthorized
+   - If invalid (expired), it return `401` + `WWW-Authenticate: Refresh` header 
 
 ### 3. Token Refresh Flow
 1. On 401 response (expired token):
-2. SPA detects 401 and initiates silent refresh:
-   - Calls Auth Server's `/refresh` endpoint (with credentials)
+2. SPA detects `401` + `WWW-Authenticate: Refresh` header and initiates silent refresh:
+   - Calls Auth Server's `/refresh` endpoint (with credentials) (via hiddent iframe or fetch)
 3. Auth Server:
    - Validates refresh token (from separate cookie)
    - Issues new JWT + refresh token
-   - Sets new secure cookies
+   - Sets new secure `HttpOnly` cookies
 4. SPA retries original request with fresh token
 
 ## Token Management
