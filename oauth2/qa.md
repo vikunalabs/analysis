@@ -851,3 +851,102 @@ These documents provide:
 3. **Production-ready practices** for security and deployment
 
 Would you like me to add any specific sections or expand on particular areas?
+
+## QA7
+
+Question:
+
+Should Spring auth server issue access token and refresh token in separate HttpOnly cookies? Why
+
+Answer:
+
+Excellent and critical question. The answer is **yes, absolutely**, and here is the detailed breakdown of why this is a security best practice.
+
+---
+
+### **Short Answer**
+
+Yes, the Spring Auth Server should issue the **access token** (JWT) and the **refresh token** in **separate, distinct `HttpOnly` cookies**. This is a fundamental security principle known as the **Separation of Duties**.
+
+Mixing them in one cookie or using the same cookie for both purposes creates a significant security vulnerability.
+
+---
+
+### **Detailed Explanation: The "Why"**
+
+#### 1. **Different Risk Profiles & Lifetimes**
+
+| Token | Purpose | Lifetime | Risk if Stolen |
+| :--- | :--- | :--- | :--- |
+| **Access Token (JWT)** | Authenticates API requests. | **Short (minutes)**. | **Limited**. Attacker has a short window to misuse it before it expires naturally. |
+| **Refresh Token** | Obtains new access tokens. | **Long (days, weeks)**. | **Severe**. Attacker can get new access tokens indefinitely, leading to a full account compromise until the refresh token is manually revoked. |
+
+By putting them in separate cookies, you isolate the high-value, long-lived asset (refresh token) from the lower-value, short-lived asset (access token). A breach that exposes a cookie containing *only* an access token has a much smaller impact.
+
+#### 2. **Narrower Cookie Scopes (Path Attribute)**
+
+This is the most important technical reason. You can restrict which server or endpoint can even *see* each token.
+
+*   **Access Token Cookie:** `Path=/`
+    *   **Sent to:** Every request to the Auth Server **and** the Resource Server.
+    *   **Why:** The Resource Server needs it to validate every API call.
+
+*   **Refresh Token Cookie:** `Path=/auth/refresh`
+    *   **Sent to:** **Only** to the Auth Server's specific `/auth/refresh` endpoint.
+    *   **Why:** The refresh token should **never** be sent to the Resource Server. The Resource Server has no business with it. This drastically reduces its attack surface. If an attacker compromises your Resource Server, they still cannot intercept refresh tokens.
+
+**Without this separation,** a single cookie sent to both servers unnecessarily exposes the refresh token to the Resource Server.
+
+#### 3. **Independent Management and Revocation**
+
+*   **Access Token Expiry:** Handled automatically by its short lifespan.
+*   **Refresh Token Revocation:** If you need to log a user out everywhere, you can invalidate just the refresh token on the server-side (e.g., delete it from a database) without affecting the short-lived access token's natural expiration.
+
+#### 4. **Mitigation of Token Leakage**
+
+If an attack somehow leaks the access token (e.g., through a misconfigured log), it does not automatically leak the refresh token, and vice-versa.
+
+---
+
+### **How to Implement This Correctly**
+
+Your Auth Server, upon successful Google login, should set **two separate cookies** in the response.
+
+**1. Access Token Cookie (for the Resource Server)**
+```http
+Set-Cookie: access_token=eyJhbGciOiJ...; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=900
+```
+*   `Path=/`: Sent to all paths on the same domain, including the Resource Server.
+
+**2. Refresh Token Cookie (for the Auth Server only)**
+```http
+Set-Cookie: refresh_token=abc123def456...; HttpOnly; Secure; SameSite=Strict; Path=/auth/refresh; Max-Age=604800
+```
+*   `Path=/auth/refresh`: This cookie is **only** sent when the browser specifically calls the `https://auth-server.com/auth/refresh` endpoint. It is **never** sent to the Resource Server (`https://api-server.com`).
+*   `SameSite=Strict`: Offers even stronger CSRF protection for this critical endpoint.
+
+### **The Refresh Flow with Separate Cookies**
+
+1.  **SPA** → **Resource Server:** Request fails with `401 Unauthorized` (expired access token).
+2.  **SPA** → **Auth Server:** Makes a `POST` request to `/auth/refresh`.
+3.  **Browser** **automatically** attaches *only* the `refresh_token` cookie (because of `Path=/auth/refresh`) to this request. The `access_token` cookie is not sent.
+4.  **Auth Server:**
+    *   Extracts the refresh token from the cookie.
+    *   Validates it against a stored whitelist (recommended for revocability).
+    *   Issues a **brand new access token** and a **new refresh token** ( implementing refresh token rotation).
+    *   Sets the new pair of cookies in the response.
+5.  **SPA** retries the original request with the new `access_token` cookie.
+
+---
+
+### **Summary: Why Separate Cookies are Non-Negotiable**
+
+| Factor | Single Cookie | Separate Cookies | Winner |
+| :--- | :--- | :--- | :--- |
+| **Security** | High-value token exposed everywhere. | High-value token isolated to one endpoint. | **Separate** |
+| **Attack Surface** | Large. Refresh token sent to Resource Server. | Minimal. Refresh token only sent to Auth Server. | **Separate** |
+| **Scope Control** | Impossible to differentiate. | Precise control via `Path` attribute. | **Separate** |
+| **Revocation** | Clumsy, requires invalidating everything. | Granular; can revoke refresh token independently. | **Separate** |
+| **Best Practice** | **Violates** OAuth2 and security principles. | **Aligns perfectly** with OAuth2 and security best practices. | **Separate** |
+
+**Conclusion:** Issuing access and refresh tokens in separate, appropriately scoped `HttpOnly` cookies is a critical security control. It minimizes the risk of a full account takeover by containing the blast radius of a token compromise and is a fundamental expectation in a well-architected OAuth2 system.
