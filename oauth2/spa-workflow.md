@@ -410,7 +410,7 @@ G -- Refresh Fail --> I[SPA redirects to login]
 
 I'm ready for your follow-up questions.
 
-## QA
+## QA5
 
 **Question**
 Follow up question 2a - Shouldn't Spring auth server really check if the access token is valid and expired before issuing a new access and refresh token? 
@@ -476,7 +476,7 @@ The backend doesn't need to prevent this. It's a smart client-side optimization.
 
 In summary, the refresh endpoint's logic is: *"If the presented refresh token is valid and exists in my database, I will issue new tokens. The state of the access token is irrelevant to this operation."* This design is secure and enables the desired user experience.
 
-## QA 
+## QA6
 
 **Question**
 Thanks! Now that you know auth has both secured and unsecured endpoints and resource server has secured endpoint  and some unsecured endpoints  such as health endpoints exposed via spring actuator. I want your help in the laying out detailed steps for validating the access token cookie and using JwtAuthenticationFilter or a custom AuthenticationEntryPoint on the Auth Server to check for an expired JWT and set the WWW-Authenticate: Refresh header before sending the 401 response. 
