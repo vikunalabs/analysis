@@ -685,3 +685,69 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     *   It triggers the silent refresh flow via `POST /auth/refresh`.
 
 This design ensures a clean separation of concerns, consistent behavior across your servers, and the correct signals for your SPA to maintain the user session seamlessly.
+
+## QA7
+
+**Question** Why calls to api/auth/refresh endpoint should be authenticated() in SecurityFilterChain?
+
+
+**Answer**
+
+Excellent question. This gets to a subtle but absolutely critical security nuance in this architecture. Adding the `/auth/refresh` endpoint under `.authenticated()` is **intentional and necessary**, but the type of authentication it requires is different from other endpoints.
+
+Here’s the breakdown of the "why":
+
+### 1. It *Is* Authenticated, But by the Refresh Token, Not the Access Token
+
+*   The `/refresh` endpoint is not a public endpoint. It must be protected. Its entire purpose is to prove that the client possesses a valid, unrevoked refresh token and is therefore entitled to new credentials.
+*   The **refresh token cookie** is the credential that authenticates this request. By placing it under `.authenticated()`, we ensure that the Spring Security filter chain will attempt to authenticate the request. Our `JwtAuthenticationFilter` will try to use the *access* token, fail, and then the `CustomAuthenticationEntryPoint` will handle it. This is where the special case logic comes in.
+
+### 2. The Security Filter Chain Flow for `/auth/refresh`
+
+This sequence diagram illustrates the specific flow for a request to the `/auth/refresh` endpoint, highlighting how it is ultimately authenticated using the refresh token despite the initial failure of the access token:
+
+```mermaid
+sequenceDiagram
+    participant SPA
+    participant FilterChain
+    participant JwtAuthFilter
+    participant AuthEntryPoint
+    participant RefreshController
+
+    SPA->>FilterChain: POST /auth/refresh<br>(Expired AT Cookie, Valid RT Cookie)
+    Note over FilterChain: SecurityContext is empty
+    FilterChain->>JwtAuthFilter: execute
+    JwtAuthFilter->>JwtAuthFilter: Extract & validate AT
+    JwtAuthFilter-->>FilterChain: Validation fails (expired)<br>Clears Context
+    Note over FilterChain: AuthenticationException is thrown
+    FilterChain->>AuthEntryPoint: commence()
+    AuthEntryPoint->>AuthEntryPoint: Check exception cause: isTokenExpired?
+    AuthEntryPoint-->>AuthEntryPoint: Cause is JwtValidationException (expired)
+    AuthEntryPoint->>FilterChain: **Special Case Logic:**<br>Skip 401 response for /refresh
+    Note over FilterChain: Request is allowed to proceed<br>to the controller
+    FilterChain->>RefreshController: executeRefresh()
+    RefreshController->>RefreshController: **Validate Refresh Token Cookie**<br>(Signature, DB, expiry)
+    RefreshController-->>RefreshController: RT is valid
+    RefreshController->>SPA: 204 No Content +<br>Set-Cookie: new_access_token
+```
+
+### 3. Why Not Make it `.permitAll()`?
+
+Making it `.permitAll()` would be a major security vulnerability. Here’s why:
+
+*   **No Authentication Checks:** A `.permitAll()` endpoint bypasses the entire security filter chain. Your custom filters and entry points would not be called.
+*   **Open to Abuse:** Anyone on the internet could spam your `/auth/refresh` endpoint without any credentials. While they wouldn't get a token without a valid refresh cookie, it would be an open attack surface for DoS attempts or probing.
+*   **Loss of Control:** You would have to re-implement all the security logic (CORS, CSRF, etc.) manually inside the controller, which is error-prone and breaks the centralized security model.
+
+### The Correct Implementation Summary
+
+1.  **Secure it:** Keep `/auth/refresh` under `.authenticated()`. This ensures it's protected by the security chain.
+2.  **Handle it in the EntryPoint:** The `CustomAuthenticationEntryPoint` must have the special case logic shown in the diagram. For *any* authentication failure on the `/auth/refresh` path, it should **not** send a `401`. Instead, it must let the request through to the controller.
+3.  **Validate in the Controller:** The controller method for `/auth/refresh` is then responsible for:
+    *   Manually extracting the **refresh token** from the cookie.
+    *   Validating it (JWT structure, signature, expiry).
+    *   Checking its validity against the database (for revocation).
+    *   If valid, generating new tokens and setting the cookies.
+    *   If invalid, then it should send the error response (e.g., `401`).
+
+This approach is the best practice because it uses the standard Spring Security infrastructure for routing and protection, while allowing for the unique "authenticate via a different cookie" requirement of the refresh endpoint.
