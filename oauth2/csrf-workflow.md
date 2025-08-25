@@ -69,6 +69,8 @@ Upon successful login, the Auth Server:
 
 ## **Phase 3: Accessing Protected Resources**
 
+Protected resources could be on Auth Server or Resource Server. Below walkthrough take Resource Server in examples, but the same behaviour is expected when SPA calls Auth Server on any protected or secured endpoints/resources. 
+
 ### **Step 3.1: Read Request (No CSRF needed)**
 
 *   **SPA -> Resource Server:** `GET /api/profiles/me`
