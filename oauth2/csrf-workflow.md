@@ -24,11 +24,21 @@ This phase protects endpoints like `login` and `register` that change state but 
 *   **SPA -> Auth Server:** `GET /auth/csrf`
 *   **Purpose:** To obtain a token for making pre-login state-changing requests (e.g., login, register).
 *   **Auth Server Response:**
-    *   **Body:** `{ "csrfToken": "base64(header).base64(payload).base64(signature)" }`
+    *   **Body:** `{ "csrfToken": "base64Url(randomValue).base64Url(signature)" }`
     *   **How it's made:**
-        1.  **Payload:** `{ "purpose": "anon_csrf", "exp": 1679875200 }` (short-lived, e.g., 10 mins)
-        2.  **Signing:** The Auth Server signs the token header and payload with its **private RSA key**.
-*   **SPA Action:** Stores the received `csrfToken` in memory (e.g., a global variable or store).
+        1.  **Generate Random Value:** The server generates a cryptographically secure random string (e.g., 32 bytes).
+        2.  **Create Signature:** The server creates a digital signature for this random value using its **private RSA key**.
+            *   `signature = RSA-SHA256(privateKey, randomValue)`
+        3.  **Encode & Combine:** Both the random value and the signature are Base64Url-encoded and combined into a single string with a dot (`.`) separator.
+*   **SPA Action:** Stores the received `csrfToken` in memory (e.g., a global variable or store). This token is intended for **single-use** to protect the subsequent login or registration request.
+
+#### **Validation of Anonymous CSRF Token (e.g., during `POST /auth/login`)**
+
+*   The Auth Server receives the `X-CSRF-TOKEN` header.
+*   It splits the token on the dot (`.`) to separate the encoded random value and signature.
+*   It decodes the random value from Base64Url.
+*   It uses its **public RSA key** to verify that the decoded signature is valid for the decoded random value.
+*   If the signature is valid, the request is considered legitimate and proceeds. The server SHOULD then treat this single-use token as invalidated.
 
 ### **Step 1.2: User Login**
 
