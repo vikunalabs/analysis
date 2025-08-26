@@ -159,7 +159,7 @@ This architecture provides a solid, secure, and scalable foundation for your Lin
 
 This document provides a high-level overview. For detailed sequence diagrams, API specifications, and logic flows for each core functionality, please refer to the following dedicated pages:
 
-*   **[Authentication & Authorization Workflow](./Authentication_Workflow.md)**: The complete end-to-end flow for user registration, login (traditional and Google OAuth), token issuance, silent refresh, and logout.
+*   **[Authentication & Authorization Workflow](./docs/Authentication_Workflow.md)**: The complete end-to-end flow for user registration, login (traditional and Google OAuth), token issuance, silent refresh, and logout.
 *   **[URL Shortening Flow](./URL_Shortening_Flow.md)**: The process of creating a new short link, from the UI request through to saving in the database and caching in Redis.
 *   **[Link Redirection Flow](./Link_Redirection_Flow.md)**: The high-performance flow for resolving a short code to a full URL, involving cache checks, analytics logging, and redirects.
 *   **[QR Code Generation & Management](./QR_Code_Flow.md)**: The workflow for generating, storing, and retrieving QR codes associated with shortened links.
