@@ -43,4 +43,3 @@ Information about the project itself and how to contribute.
 *   [Team & Responsibilities](./project/team.md) - (Optional) Who works on what.
 *   [Glossary](./project/glossary.md) - Definitions of key terms and acronyms used across the project.
 
----
