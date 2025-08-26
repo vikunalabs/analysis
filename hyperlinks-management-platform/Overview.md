@@ -1,12 +1,6 @@
-# LinkForge
+# **Project Introduction**
 
-## Overview
-
----
-
-### **Project Introduction**
-
-**Project Name:** LinkForge (or a name of your choice, e.g., NexusLink, ShortCircuit)
+**Project Name:** LinkForge
 
 **Vision:** To build a robust, secure, and user-friendly platform for comprehensive link management, offering services beyond simple shortening. LinkForge aims to be a one-stop solution for individuals, content creators, and enterprises to manage their digital footprint, enhance engagement through custom landing pages, and integrate powerful link analytics into their workflows.
 
@@ -20,59 +14,64 @@
 
 ---
 
-### **System Architecture & Components**
+## **System Architecture & Components**
 
 This architecture is designed for security, scalability, and a clean separation of concerns.
 
 ```mermaid
 graph TB
     subgraph "Client Layer (SPA)"
-        A[Vite + Vanilla TS App] --> B[Auth Service Module]
-        A --> C[API Service Module]
-        A --> D[Router & UI Components]
-        B -- Manages Auth Flow --> E[Auth Server]
-        C -- Sends Requests With Cookie --> F[Resource Server]
+        A[Vite + Vanilla TS App] --> B[Auth Service<br>(Axios)]
+        A --> C[API Service<br>(Axios + Interceptors)]
+        A --> D[State Management<br>(Zustand)]
+        A --> E[Router<br>(Navigo)]
+        A --> F[UI Components<br>(Custom Library)]
+        B -- Manages Auth Flow --> G[Auth Server]
+        C -- Sends Requests With Cookie --> H[Resource Server]
     end
 
     subgraph "Backend Layer (Spring Boot Microservices)"
-        E[Auth Server]
-        F[Resource Server]
+        G[Auth Server]
+        H[Resource Server]
     end
 
     subgraph "External Services"
-        G[Google Identity Platform]
-        H[Email Service e.g., SES, SendGrid]
-        I[Database PostgreSQL]
-        J[Cache Redis]
+        I[Google Identity Platform]
+        J[Email Service e.g., SES, SendGrid]
+        K[Database PostgreSQL]
+        L[Cache Redis]
     end
 
-    E --> G
-    E --> H
-    E --> I
-    F --> I
-    F --> J
+    G --> I
+    G --> J
+    G --> K
+    H --> K
+    H --> L
     
     style A fill:#cde4ff,stroke:#333,stroke-width:2px
-    style E fill:#ffcc99,stroke:#333,stroke-width:2px
-    style F fill:#ffcc99,stroke:#333,stroke-width:2px
+    style G fill:#ffcc99,stroke:#333,stroke-width:2px
+    style H fill:#ffcc99,stroke:#333,stroke-width:2px
 
 ```
 
 #### **1. Client Application (SPA - Single Page Application)**
 *   **Technology:** Vite + Vanilla TypeScript.
-*   **Responsibility:** Provides the entire user interface. It is a static bundle of HTML, CSS, and JS served from a simple web server (like Nginx) or a CDN. It contains no application logic other than presentation and client-side routing.
+*   **Responsibility:** Provides the entire user interface. It is a static bundle of HTML, CSS, and JS served from a simple web server (like Nginx) or a CDN.
 
 **Key Client-Side Modules:**
-*   **Auth Service:** A central TypeScript module responsible for all interactions with the Auth Server.
+*   **Auth Service:** A central TypeScript service (using **Axios**) responsible for all interactions with the Auth Server.
     *   Initiates the OAuth2 flow with Google (redirects to Auth Server).
-    *   Handles traditional login/registration forms.
-    *   Manages the silent token refresh process (using a hidden iframe or a fetch call to the Auth Server's `/refresh` endpoint).
-    *   Exposes functions like `isAuthenticated()`, `getUserInfo()` (from access token claims), and `logout()`.
-*   **API Service:** A module for all communication with the Resource Server.
-    *   Automatically attaches credentials (`credentials: 'include'`) to all fetch requests to the Resource Server domain, ensuring the HttpOnly access token cookie is sent.
-    *   Intercepts `401` responses with the `WWW-Authenticate: Refresh` header and triggers the `Auth Service` to get a new token before retrying the original request.
-*   **Router:** A client-side router (e.g., based on `window.location` or a lightweight library like `navigo`) to handle navigation between "pages" (e.g., Dashboard, Login, Analytics) without full page reloads.
-*   **UI Components:** Reusable TypeScript classes/functions to create dynamic UI elements (modals, tables, forms).
+    *   Handles traditional login/registration forms via Axios calls.
+    *   Manages the silent token refresh process (using a hidden iframe or an Axios call to the Auth Server's `/refresh` endpoint).
+*   **API Service:** A dedicated Axios instance configured for all communication with the Resource Server.
+    *   Pre-configured with `withCredentials: true` to ensure the HttpOnly access token cookie is automatically sent with every request.
+    *   Uses **Axios Response Interceptors** to elegantly handle `401` responses with the `WWW-Authenticate: Refresh` header. It triggers the `Auth Service` to get a new token and automatically retries the original request.
+*   **State Management (Zustand):** A centralized store to manage global application state.
+    *   **Auth Store:** Tracks authentication state (`isAuthenticated`), user profile claims, and loading states.
+    *   **UI Store:** Manages client-side state like modal visibility, notifications, and theme preferences.
+    *   **Data Store:** (Optional) Can cache data like the user's list of links to share across components.
+*   **Router (Navigo):** A lightweight and powerful client-side router. It handles navigation between different application "views" (e.g., Dashboard, Login, Analytics) without full page reloads, mapping routes to specific rendering functions.
+*   **UI Components (Custom Library):** A suite of reusable, pre-built TypeScript/Web Component classes or functions for creating dynamic and consistent UI elements (buttons, modals, tables, forms, charts). This library provides the foundational building blocks for the entire application interface.
 
 #### **2. Authentication Server (Spring Boot Application)**
 *   **Technology:** Spring Boot, Spring Security, Spring Data JPA, OAuth2 Client/Resource Server.
@@ -106,7 +105,7 @@ graph TB
     *   `GET /api/analytics/{linkId}` - Get analytics for a link.
     *   `POST /api/qrcodes` - Generate a QR code.
     *   `GET /api/enterprise/**` - Enterprise API endpoints.
-*   **Token Refresh Handling:** If a token is expired, it returns a `401 Unauthorized` status with a clear header: `WWW-Authenticate: Refresh`. This is a signal to the SPA's `API Service` module that it needs to refresh the token.
+*   **Token Refresh Handling:** If a token is expired, it returns a `401 Unauthorized` status with a clear header: `WWW-Authenticate: Refresh`. This is a signal to the SPA's `API Service` interceptor that it needs to refresh the token.
 
 #### **4. Data Store & External Services**
 *   **Primary Database (PostgreSQL):** Stores user data (Auth Server), links, QR codes, analytics data (Resource Server).
@@ -122,8 +121,10 @@ graph TB
 | :--- | :--- | :--- | :--- |
 | **Build Tool** | Vite | Vite | Blazing fast development server (HMR) and optimized builds for production. Perfect for Vanilla TS. |
 | **Client-Side** | Language | TypeScript | Adds static typing, reducing runtime errors and improving developer experience and tooling. |
-| | HTTP Client | Native `fetch()` | Modern, built-in, and supports the `credentials: 'include'` option necessary for cookies. |
-| | Routing | Custom or `navigo` | A simple router is sufficient for a Vanilla TS app to handle different "views". |
+| | HTTP Client | **Axios** | Superior to native `fetch` for interceptors, automatic JSON transformation, and better error handling. **Critical for auth flow.** |
+| | State Management | **Zustand** | Lightweight, un-opinionated, and simple API. Perfect for managing global state (auth, UI) in a Vanilla TS app. |
+| | Routing | **Navigo** | A simple, powerful, and lightweight client-side router that integrates well without a framework. |
+| | UI Components | **Custom Library** | Provides full control over branding, functionality, and user experience. Reusable across the application. |
 | **Auth Server** | Framework | Spring Boot (Java 17+) | Industry standard, excellent Spring Security support for OAuth2 and JWT. |
 | | Security | Spring Security OAuth2 | Provides a robust, secure, and customizable framework for implementing the auth server. |
 | | Token Format | JWT (JSON Web Tokens) | Stateless, self-contained, and easily verifiable by the Resource Server. |
