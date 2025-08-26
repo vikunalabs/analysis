@@ -21,36 +21,34 @@ This architecture is designed for security, scalability, and a clean separation 
 ```mermaid
 graph TB
     subgraph "Client Layer (SPA)"
-        A[Vite + Vanilla TS App] --> B[Auth Service<br>(Axios)]
-        A --> C[API Service<br>(Axios + Interceptors)]
-        A --> D[State Management<br>(Zustand)]
-        A --> E[Router<br>(Navigo)]
-        A --> F[UI Components<br>(Custom Library)]
-        B -- Manages Auth Flow --> G[Auth Server]
-        C -- Sends Requests With Cookie --> H[Resource Server]
+        A[Vite + Vanilla TS App] --> B[Auth Service Module]
+        A --> C[API Service Module]
+        A --> D[Router & UI Components]
+        B -- Manages Auth Flow --> E[Auth Server]
+        C -- Sends Requests With Cookie --> F[Resource Server]
     end
 
     subgraph "Backend Layer (Spring Boot Microservices)"
-        G[Auth Server]
-        H[Resource Server]
+        E[Auth Server]
+        F[Resource Server]
     end
 
     subgraph "External Services"
-        I[Google Identity Platform]
-        J[Email Service e.g., SES, SendGrid]
-        K[Database PostgreSQL]
-        L[Cache Redis]
+        G[Google Identity Platform]
+        H[Email Service e.g., SES, SendGrid]
+        I[Database PostgreSQL]
+        J[Cache Redis]
     end
 
-    G --> I
-    G --> J
-    G --> K
-    H --> K
-    H --> L
+    E --> G
+    E --> H
+    E --> I
+    F --> I
+    F --> J
     
     style A fill:#cde4ff,stroke:#333,stroke-width:2px
-    style G fill:#ffcc99,stroke:#333,stroke-width:2px
-    style H fill:#ffcc99,stroke:#333,stroke-width:2px
+    style E fill:#ffcc99,stroke:#333,stroke-width:2px
+    style F fill:#ffcc99,stroke:#333,stroke-width:2px
 
 ```
 
