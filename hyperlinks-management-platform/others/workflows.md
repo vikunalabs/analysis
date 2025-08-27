@@ -61,12 +61,6 @@ This workflow terminates the user's session across the system.
 | **1. Initiation** | User clicks "Logout". | 1. Send `POST /auth/logout`.<br>2. Include the `X-CSRF-TOKEN` header. | 1. **Validate the CSRF token.**<br>2. Extract the Refresh Token JWT from the cookie to identify the session (`sid` and `jti`).<br>3. **Delete the session record** from the database using the `jti` or `sid`, instantly revoking the Refresh Token and invalidating all associated CSRF tokens.<br>4. **Response:** Clear the `access_token` and `refresh_token` cookies (by setting them to expire immediately). Respond `200 OK`. |
 | **2. Cleanup** | Logout request succeeds. | 1. Receive `200` response.<br>2. **Clear the local auth state:** Set `isAuthenticated: false`, `user: null`.<br>3. **Clear the authenticated CSRF token** from memory.<br>4. Redirect the user to the login page. | (Process is complete) |
 
-This concludes the detailed workflow documentation for the core authentication processes. The workflows for "Forgot Password" and "Reset Password" would follow a similar pattern to "Registration" and "Email Confirmation," involving pre-flight CSRF tokens, state-changing POST requests, email generation, and token invalidation.
-
-You are absolutely right. The Google authentication workflow is a critical part of the architecture and deserves its own detailed breakdown. Thank you for pointing out the omission.
-
-Here is the detailed workflow for Google Authentication.
-
 ---
 
 ### **Workflow 5: Google Federation (OAuth2 Login)**
@@ -81,14 +75,3 @@ This workflow delegates the authentication process to Google, leveraging the OAu
 | **4. Session Load** | User lands back on the SPA. | 1. The user is now on the SPA at `/dashboard`.<br>2. **The SPA discovers it is authenticated because the `access_token` cookie is now present.**<br>3. To populate its UI, the SPA must call a user profile endpoint (e.g., `GET /auth/user`).<br>4. This call includes the cookie automatically and returns the user's data, allowing the SPA to update its global state (Zustand store) with `isAuthenticated: true` and the user object. | 1. The protected endpoint `GET /auth/user` validates the JWT from the cookie.<br>2. It decodes the user claims (`sub`, `email`, etc.) and returns them in the response body. |
 
 ---
-
-### **Key Differences from Traditional Login:**
-
-| Aspect | Traditional Login | Google Federation |
-| :--- | :--- | :--- |
-| **SPA Involvement** | SPA manages the entire flow with fetch requests. | SPA only initiates and finishes the flow; the middle steps are HTTP redirects handled by the browser and backend. |
-| **Credentials** | SPA sends email/password in a POST request. | SPA never sees Google credentials. The Auth Server exchanges a code for tokens directly with Google. |
-| **CSRF Protection** | Protected by a pre-flight anonymous CSRF token. | Protected by the OAuth2 `state` parameter. |
-| **User Creation** | Explicitly triggered by a `POST /auth/register` request. | Implicitly happens during the OAuth2 callback if the user is new. |
-
-This workflow highlights the power of the backend-for-frontend (BFF) pattern with the Auth Server. It keeps the sensitive token exchange and user creation logic secure on the backend while providing a seamless login experience for the end-user. The SPA's final state after both traditional and Google login is identical: it has the necessary HttpOnly cookies and a user object in memory.
