@@ -40,7 +40,22 @@ This workflow transitions the user from an anonymous to an authenticated state.
 
 ---
 
-### **Workflow 3: Silent Token Refresh**
+---
+
+### **Workflow 3: Google Federation (OAuth2 Login)**
+
+This workflow delegates the authentication process to Google, leveraging the OAuth 2.0 protocol. The SPA's role is primarily to initiate and handle the redirect, while the heavy lifting of exchanging codes for tokens and creating sessions is done by the Auth Server.
+
+| Step | User Action / System Event | SPA (Frontend) Perspective | Auth Server (Backend) Perspective |
+| :--- | :--- | :--- | :--- |
+| **1. Initiation** | User clicks "Sign in with Google" on the SPA's login page. | 1. **Redirect** the user's browser to the Auth Server's Google endpoint: `GET /oauth2/authorization/google`.<br><br>*This is a simple navigation, not an AJAX call. The SPA does not handle the response from this request directly.* | 1. Spring Security's OAuth2 client infrastructure intercepts this request.<br>2. It constructs the correct URL to redirect the user to **Google's authorization server**, including your app's client ID, requested scopes (`profile`, `email`), and a generated `state` parameter (for CSRF protection).<br>3. **Redirects** the user's browser to Google. |
+| **2. Authentication & Consent** | User authenticates on Google's domain. | **The SPA is completely uninvolved in this step.** The user is on `accounts.google.com`. | **Google's Servers:**<br>1. Google presents a login and consent screen to the user.<br>2. If the user approves, Google generates an authorization `code`.<br>3. Google **redirects** the user's browser back to your Auth Server's pre-configured **redirect URI** (e.g., `/login/oauth2/code/google`), appending the `code` and `state` parameters. |
+| **3. Token Exchange & Session Creation** | User is redirected back to your Auth Server. | **The SPA is still not involved.** The browser makes a request to the Auth Server's callback URL. | 1. The Auth Server receives the request at the redirect URI.<br>2. It validates the `state` parameter to prevent CSRF.<br>3. **Exchanges the authorization `code`** with Google for the user's **ID Token** and **Access Token**.<br>4. **Fetches user profile** from Google's `userinfo` endpoint using the access token.<br>5. **Checks the `federated_identities` table** for an existing entry with `provider='google'` and `provider_subject_id=`(Google's unique user ID).<br>   - **If Found:** Retrieve the linked `user_id`.<br>   - **If Not Found (New User):** <br>     a. Check if the user's email from Google already exists in the `user_accounts` table.<br>     b. **If email exists:** Link the Google identity to the existing account by creating a record in `federated_identities`.<br>     c. **If email does not exist:** Create a new user. **Within a DB transaction:** <br>        - Insert into `user_accounts` (email, mark as verified).<br>        - Insert into `user_profiles` (populate name from Google profile).<br>        - Insert into `federated_identities` (link the new `user_id` to Google's ID).<br>6. **Session Establishment:** <br>   - Generate a new session ID (`sid`), Access Token, Refresh Token, and authenticated CSRF token (just like in Traditional Login).<br>   - Persist the Refresh Token's `jti` and `sid` in the database.<br>7. **Final Response:** <br>   - Set the `access_token` and `refresh_token` as `HttpOnly` cookies on the response.<br>   - **Redirect** the user's browser **back to the SPA's main application page** (e.g., `https://spa.com/dashboard`). |
+| **4. Session Load** | User lands back on the SPA. | 1. The user is now on the SPA at `/dashboard`.<br>2. **The SPA discovers it is authenticated because the `access_token` cookie is now present.**<br>3. To populate its UI, the SPA must call a user profile endpoint (e.g., `GET /auth/user`).<br>4. This call includes the cookie automatically and returns the user's data, allowing the SPA to update its global state (Zustand store) with `isAuthenticated: true` and the user object. | 1. The protected endpoint `GET /auth/user` validates the JWT from the cookie.<br>2. It decodes the user claims (`sub`, `email`, etc.) and returns them in the response body. |
+
+---
+
+### **Workflow 4: Silent Token Refresh**
 
 This workflow is automatically triggered by the SPA to maintain the user's session without interaction.
 
@@ -52,7 +67,7 @@ This workflow is automatically triggered by the SPA to maintain the user's sessi
 
 ---
 
-### **Workflow 4: Logout**
+### **Workflow 5: Logout**
 
 This workflow terminates the user's session across the system.
 
@@ -60,18 +75,5 @@ This workflow terminates the user's session across the system.
 | :--- | :--- | :--- | :--- |
 | **1. Initiation** | User clicks "Logout". | 1. Send `POST /auth/logout`.<br>2. Include the `X-CSRF-TOKEN` header. | 1. **Validate the CSRF token.**<br>2. Extract the Refresh Token JWT from the cookie to identify the session (`sid` and `jti`).<br>3. **Delete the session record** from the database using the `jti` or `sid`, instantly revoking the Refresh Token and invalidating all associated CSRF tokens.<br>4. **Response:** Clear the `access_token` and `refresh_token` cookies (by setting them to expire immediately). Respond `200 OK`. |
 | **2. Cleanup** | Logout request succeeds. | 1. Receive `200` response.<br>2. **Clear the local auth state:** Set `isAuthenticated: false`, `user: null`.<br>3. **Clear the authenticated CSRF token** from memory.<br>4. Redirect the user to the login page. | (Process is complete) |
-
----
-
-### **Workflow 5: Google Federation (OAuth2 Login)**
-
-This workflow delegates the authentication process to Google, leveraging the OAuth 2.0 protocol. The SPA's role is primarily to initiate and handle the redirect, while the heavy lifting of exchanging codes for tokens and creating sessions is done by the Auth Server.
-
-| Step | User Action / System Event | SPA (Frontend) Perspective | Auth Server (Backend) Perspective |
-| :--- | :--- | :--- | :--- |
-| **1. Initiation** | User clicks "Sign in with Google" on the SPA's login page. | 1. **Redirect** the user's browser to the Auth Server's Google endpoint: `GET /oauth2/authorization/google`.<br><br>*This is a simple navigation, not an AJAX call. The SPA does not handle the response from this request directly.* | 1. Spring Security's OAuth2 client infrastructure intercepts this request.<br>2. It constructs the correct URL to redirect the user to **Google's authorization server**, including your app's client ID, requested scopes (`profile`, `email`), and a generated `state` parameter (for CSRF protection).<br>3. **Redirects** the user's browser to Google. |
-| **2. Authentication & Consent** | User authenticates on Google's domain. | **The SPA is completely uninvolved in this step.** The user is on `accounts.google.com`. | **Google's Servers:**<br>1. Google presents a login and consent screen to the user.<br>2. If the user approves, Google generates an authorization `code`.<br>3. Google **redirects** the user's browser back to your Auth Server's pre-configured **redirect URI** (e.g., `/login/oauth2/code/google`), appending the `code` and `state` parameters. |
-| **3. Token Exchange & Session Creation** | User is redirected back to your Auth Server. | **The SPA is still not involved.** The browser makes a request to the Auth Server's callback URL. | 1. The Auth Server receives the request at the redirect URI.<br>2. It validates the `state` parameter to prevent CSRF.<br>3. **Exchanges the authorization `code`** with Google for the user's **ID Token** and **Access Token**.<br>4. **Fetches user profile** from Google's `userinfo` endpoint using the access token.<br>5. **Checks the `federated_identities` table** for an existing entry with `provider='google'` and `provider_subject_id=`(Google's unique user ID).<br>   - **If Found:** Retrieve the linked `user_id`.<br>   - **If Not Found (New User):** <br>     a. Check if the user's email from Google already exists in the `user_accounts` table.<br>     b. **If email exists:** Link the Google identity to the existing account by creating a record in `federated_identities`.<br>     c. **If email does not exist:** Create a new user. **Within a DB transaction:** <br>        - Insert into `user_accounts` (email, mark as verified).<br>        - Insert into `user_profiles` (populate name from Google profile).<br>        - Insert into `federated_identities` (link the new `user_id` to Google's ID).<br>6. **Session Establishment:** <br>   - Generate a new session ID (`sid`), Access Token, Refresh Token, and authenticated CSRF token (just like in Traditional Login).<br>   - Persist the Refresh Token's `jti` and `sid` in the database.<br>7. **Final Response:** <br>   - Set the `access_token` and `refresh_token` as `HttpOnly` cookies on the response.<br>   - **Redirect** the user's browser **back to the SPA's main application page** (e.g., `https://spa.com/dashboard`). |
-| **4. Session Load** | User lands back on the SPA. | 1. The user is now on the SPA at `/dashboard`.<br>2. **The SPA discovers it is authenticated because the `access_token` cookie is now present.**<br>3. To populate its UI, the SPA must call a user profile endpoint (e.g., `GET /auth/user`).<br>4. This call includes the cookie automatically and returns the user's data, allowing the SPA to update its global state (Zustand store) with `isAuthenticated: true` and the user object. | 1. The protected endpoint `GET /auth/user` validates the JWT from the cookie.<br>2. It decodes the user claims (`sub`, `email`, etc.) and returns them in the response body. |
 
 ---
