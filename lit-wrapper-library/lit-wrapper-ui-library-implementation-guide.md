@@ -7,6 +7,7 @@ This guide outlines the standards for building our internal UI Library using Lit
 **Core Principles:**
 *   **Abstraction:** Hide Lit's implementation details behind a clean, team-defined API.
 *   **Consistency:** Enforce unified patterns for props, events, styling, and accessibility.
+*   **Flexibility:** Provide robust APIs for visual customization, including support for project-specific CSS frameworks like TailwindCSS.
 *   **Robustness:** Proactively solve common Web Component pitfalls like form submission and theming.
 *   **Quality:** Ensure high quality with automated testing, documentation, and type safety.
 
@@ -45,7 +46,7 @@ ui-lib-monorepo/
 ## 3. Foundation Implementation
 
 ### 3.1. Design Tokens
-Define all design values in TypeScript and generate CSS custom properties.
+Define all design values in TypeScript and generate CSS custom properties. This is the **primary and recommended** method for customizing the library's appearance.
 
 **File:** `packages/ui-library/src/foundations/tokens.ts`
 ```typescript
@@ -416,14 +417,81 @@ export default defineConfig({
 });
 ```
 
-## 7. Summary of Solved Issues
+## 7. Customization & Theming for Consumers /* NEW SECTION */
+
+A core goal of this library is to provide flexibility for consuming projects to apply their own UX designs, including those based on TailwindCSS.
+
+### 7.1. Primary Method: CSS Custom Properties (Recommended)
+The library's visual design is built entirely on CSS variables. Consumers can override these variables at the global level to rebrand the entire library.
+
+**Example (Consumer's global CSS file):**
+```css
+:root {
+  /* Rebrand the color scheme */
+  --color-primary-500: #f97316; /* Orange primary */
+  --color-primary-600: #ea580c; /* Darker orange on hover */
+
+  /* Change visual style */
+  --border-radius-md: 0.75rem; /* More rounded corners */
+
+  /* Change typography */
+  --font-family-body: 'Poppins', system-ui;
+}
+```
+*This is the cleanest, most maintainable, and performant approach.*
+
+### 7.2. Secondary Method: CSS Shadow Parts
+For more surgical adjustments, consumers can use the `::part()` selector to style specific exposed elements.
+
+**Example (Consumer's CSS):**
+```css
+/* Target the internal button part */
+ui-button::part(button) {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Target the input field inside the input component */
+ui-input::part(input) {
+  border: 2px solid var(--color-neutral-300);
+}
+```
+*Note: Overuse can lead to CSS bloat. Prefer method 7.1 for broad changes.*
+
+### 7.3. Using Slots for Content and Markup
+Content projected into slots exists in the consumer's light DOM and is fully styleable by their chosen methods (e.g., TailwindCSS).
+
+**Example (Consumer's HTML):**
+```html
+<ui-card>
+  <div slot="header" class="flex items-center justify-between p-4 bg-gray-100"> <!-- Tailwind classes -->
+    <h3 class="text-lg font-bold text-orange-800">My Project Header</h3>
+  </div>
+  <p class="text-gray-700">This content can be styled with Tailwind.</p>
+</ui-card>
+```
+
+### 7.4. Considerations for TailwindCSS
+Tailwind does not naturally penetrate Shadow DOM. Consumers have two main options:
+1.  **Use `@apply` in Library Styles:** The library's built-in styles can use `@apply` with our own CSS variables to create Tailwind-like utility classes without the bloat. (This is how the library is structured).
+2.  **Style Exposed Parts with Tailwind:** Consumers can use Tailwind to generate styles for exposed CSS parts, though this requires safelisting and can increase bundle size.
+    ```css
+    /* In consumer's CSS, using Tailwind's @apply */
+    ui-button::part(button) {
+      @apply rounded-full uppercase font-black;
+    }
+    ```
+*Recommendation: Encourage consumers to use the CSS variable override method (7.1) for theming and only use parts (7.2) for minor tweaks.*
+
+## 8. Summary of Solved Issues
 
 1.  **Form Submission:** ✅ Solved by the `FormAssociatedElement` base class using the `ElementInternals` API.
 2.  **Theming:** ✅ Solved by injecting CSS custom properties via the base class and using a `data-theme` attribute strategy.
 3.  **Consistency:** ✅ Enforced by the `UiElement` base class providing standardized props, events, and methods.
 4.  **Accessibility (A11y):** ✅ Enforced as a first-class concern in the base class and component templates (aria labels, native elements).
-5.  **External Styling:** ✅ Enabled via CSS `parts` (`part="button"`).
-6.  **Type Safety:** ✅ Maximized through strict TypeScript usage in all foundations and components.
-7.  **Testing:** ✅ Standardized via `@web/test-runner` and `@open-wc/testing` helpers.
+5.  **External Styling:** ✅ Enabled via CSS Shadow `parts` (`part="button"`) and a comprehensive CSS Variable API.
+6.  **CSS Framework Flexibility:** ✅ Addressed via multiple strategies: CSS Variable overrides, `::part()`, and light DOM slots, providing clear paths for projects using TailwindCSS.
+7.  **Type Safety:** ✅ Maximized through strict TypeScript usage in all foundations and components.
+8.  **Testing:** ✅ Standardized via `@web/test-runner` and `@open-wc/testing` helpers.
 
-By adhering to this guide, we build a robust, future-proof foundation that avoids common pitfalls and ensures a high-quality developer experience across all projects.
+By adhering to this guide, we build a robust, future-proof foundation that avoids common pitfalls, ensures a high-quality developer experience across all projects, and provides the flexibility needed for diverse visual designs.
