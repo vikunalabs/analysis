@@ -482,7 +482,7 @@ export { Input };
 ```typescript
 import { fixture, expect, html } from '@open-wc/testing';
 import { Button } from './button.js';
-import '. /button.js'; // Define the element
+import './button.js'; // Define the element
 
 describe('Button', () => {
   it('passes accessibility test', async () => {
