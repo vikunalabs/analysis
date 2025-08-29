@@ -324,6 +324,8 @@ export const buttonStyles = css`
 
 **File:** `packages/ui-library/src/components/button/button.ts`
 ```typescript
+import { html } from 'lit';
+import { property } from 'lit/decorators.js';
 import { UiElement } from '../../foundations/base-element.js';
 import { buttonStyles } from './button.styles.js';
 
