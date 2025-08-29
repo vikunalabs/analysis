@@ -98,6 +98,7 @@ This is the heart of our wrapper. All components will extend this class.
 
 **File:** `packages/ui-library/src/foundations/base-element.ts`
 ```typescript
+import { property } from 'lit/decorators.js';
 import { LitElement, PropertyValues } from 'lit';
 import { createTheme } from './tokens.js';
 
@@ -109,15 +110,22 @@ export class UiElement extends LitElement {
   @property({ type: String, reflect: true }) theme: 'light' | 'dark' | 'auto' = 'light';
   @property({ type: Boolean, reflect: true }) disabled = false;
   @property({ type: String }) testId: string = '';
+  @property({ attribute: 'aria-label' }) ariaLabel?: string;
+  @property({ attribute: 'aria-describedby' }) ariaDescribedBy?: string;
+  @property({ attribute: 'aria-hidden', type: Boolean }) ariaHidden?: boolean;
 
   // 3. ElementInternals for form association
   // @ts-ignore: TS might not know about `attachInternals`
   readonly internals?: ElementInternals;
+  // Private field for media query listener
+  private _mediaQuery?: MediaQueryList;
 
   constructor() {
     super();
     // @ts-ignore
     if (this.attachInternals) this.internals = this.attachInternals();
+    // Bind the theme change handler
+    this._handleSystemThemeChange = this._handleSystemThemeChange.bind(this);
   }
 
   // 4. Lifecycle: Apply theme on first update and when theme prop changes
@@ -125,7 +133,19 @@ export class UiElement extends LitElement {
     super.updated(changedProperties);
     if (changedProperties.has('theme')) {
       this._applyTheme();
+      this._setupThemeListener(); // Setup or teardown listener on theme change
     }
+  }
+
+  // /* Lifecycle - Connect and disconnect theme listener */
+  connectedCallback() {
+    super.connectedCallback();
+    this._setupThemeListener();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._teardownThemeListener();
   }
 
   // 5. Common Methods
@@ -137,6 +157,25 @@ export class UiElement extends LitElement {
   // Helper to generate CSS class strings
   protected getClassMap(...classLists: (string | undefined)[]): string {
     return classLists.filter(cls => cls != null).join(' ');
+  }
+
+  // /* System Theme Listener Management */
+  private _setupThemeListener() {
+    this._teardownThemeListener(); // Clean up any existing listener first
+    if (this.theme === 'auto') {
+      this._mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      this._mediaQuery.addEventListener('change', this._handleSystemThemeChange);
+    }
+  }
+
+  private _teardownThemeListener() {
+    this._mediaQuery?.removeEventListener('change', this._handleSystemThemeChange);
+  }
+
+  private _handleSystemThemeChange() {
+    if (this.theme === 'auto') {
+      this._applyTheme();
+    }
   }
 
   // 6. Theme Application Logic
@@ -155,6 +194,7 @@ export class UiElement extends LitElement {
 
 **File:** `packages/ui-library/src/foundations/form-associated-element.ts`
 ```typescript
+import { property } from 'lit/decorators.js';
 import { UiElement } from './base-element.js';
 
 export abstract class FormAssociatedElement extends UiElement {
@@ -193,6 +233,38 @@ export abstract class FormAssociatedElement extends UiElement {
     this.internals.setValidity(flags, message, this.shadowRoot?.querySelector('input') || this);
   }
 }
+```
+
+### 3.4. Event Typing (Optional but Recommended)
+
+For superior TypeScript developer experience, define custom event interfaces for your components. This allows consumers to strongly type their event listeners.
+
+**File:** `packages/ui-library/src/types/events.ts`
+```typescript
+/**
+ * Event interfaces for library components.
+ * Consumers can use these to strongly type event listeners.
+ */
+
+export interface UiButtonEventMap {
+  'ui-click': CustomEvent<{ originalTarget: HTMLButtonElement }>;
+}
+
+export interface UiInputEventMap {
+  'ui-input-change': CustomEvent<{ value: string }>;
+  'ui-input-blur': CustomEvent<{ value: string }>;
+}
+
+// ... add event maps for all components that emit events
+```
+
+To use this, consumers would cast the event target:
+```typescript
+// In a consuming application
+myButton.addEventListener('ui-click', (e) => {
+  const detail = (e as CustomEvent<UiButtonEventMap['ui-click']>).detail;
+  console.log(detail.originalTarget);
+});
 ```
 
 ## 4. Component Implementation Standards
@@ -301,6 +373,8 @@ export class Button extends UiElement {
 ### 4.3. Example: Implementing an Input (Form-Associated)
 **File:** `packages/ui-library/src/components/input/input.ts`
 ```typescript
+import { html } from 'lit';
+import { property } from 'lit/decorators.js';
 import { FormAssociatedElement } from '../../foundations/form-associated-element.js';
 import { inputStyles } from './input.styles.js';
 
@@ -339,6 +413,67 @@ export class Input extends FormAssociatedElement {
     }
   }
 }
+```
+
+### 4.4. Documentation with JSDoc
+
+Every component and its public API must be documented using JSDoc comments. This enables IDE IntelliSense and can be used to generate formal API documentation.
+
+**Example (for Button component):**
+**File:** `packages/ui-library/src/components/button/button.ts`
+```typescript
+/**
+ * A customizable button component.
+ * @element ui-button
+ * @slot - Default slot for button text content.
+ * @slot icon - Slot for an icon element. Use with `icon` property.
+ * @fires ui-click - Fired when the button is clicked and not disabled.
+ * @csspart button - The internal native `<button>` element.
+ * @csspart icon - The container for the icon slot.
+ * @csspart spinner - The spinner shown when `loading` is true.
+ */
+export class Button extends UiElement {
+  /**
+   * The visual style variant of the button.
+   * @default 'primary'
+   */
+  @property() variant: 'primary' | 'secondary' = 'primary';
+
+  /**
+   * If true, the button will show a loading spinner and be disabled.
+   * @default false
+   */
+  @property({ type: Boolean }) loading = false;
+  // ... rest of the properties and class
+}
+```
+
+### 4.5. Component Registration and Index Files
+
+Each component directory should include an index file that handles automatic registration of the custom element. This ensures components are immediately available as HTML tags when imported.
+
+**File:** `packages/ui-library/src/components/button/index.ts`
+```typescript
+import { Button } from './button.js';
+
+// Auto-register the component if not already registered
+if (!customElements.get('ui-button')) {
+  customElements.define('ui-button', Button);
+}
+
+export { Button };
+```
+
+**File:** `packages/ui-library/src/components/input/index.ts`
+```typescript
+import { Input } from './input.js';
+
+// Auto-register the component if not already registered  
+if (!customElements.get('ui-input')) {
+  customElements.define('ui-input', Input);
+}
+
+export { Input };
 ```
 
 ## 5. Testing Standards
@@ -401,17 +536,14 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'UiLibrary',
-      fileName: 'ui-library',
+      fileName: (format) => `ui-library.${format}.js`,
+      formats: ['es', 'cjs'],
     },
+    sourcemap: true,
+    minify: 'terser',
     rollupOptions: {
       // Externalize deps that shouldn't be bundled
       external: ['lit'],
-      output: {
-        // Provide global variables to use in UMD build
-        globals: {
-          lit: 'Lit',
-        },
-      },
     },
   },
 });
