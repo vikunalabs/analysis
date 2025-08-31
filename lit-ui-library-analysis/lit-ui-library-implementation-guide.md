@@ -1,4 +1,4 @@
-# Lit Wrapper UI Library Implementation Guide
+# Lit UI Library Implementation Guide
 
 ## 1. Philosophy & Overview
 
@@ -19,7 +19,7 @@ We use a monorepo to manage the library and demo applications together.
 ```
 ui-lib-monorepo/
 ├── packages/
-│   ├── ui-library/          # The core component library package
+│   ├── lit-ui-library/          # The core component library package
 │   │   ├── src/
 │   │   │   ├── components/  # Individual component directories
 │   │   │   ├── foundations/ # Base classes, tokens, utilities
@@ -48,7 +48,7 @@ ui-lib-monorepo/
 ### 3.1. Design Tokens
 Define all design values in TypeScript and generate CSS custom properties. This is the **primary and recommended** method for customizing the library's appearance.
 
-**File:** `packages/ui-library/src/foundations/tokens.ts`
+**File:** `packages/lit-ui-library/src/foundations/tokens.ts`
 ```typescript
 export const tokens = {
   color: {
@@ -96,7 +96,7 @@ export function createTheme() {
 ### 3.2. Base Element Class (`UiElement`)
 This is the heart of our wrapper. All components will extend this class.
 
-**File:** `packages/ui-library/src/foundations/base-element.ts`
+**File:** `packages/lit-ui-library/src/foundations/base-element.ts`
 ```typescript
 import { property } from 'lit/decorators.js';
 import { LitElement, PropertyValues } from 'lit';
@@ -192,7 +192,7 @@ export class UiElement extends LitElement {
 ### 3.3. Form-Associated Base Class (`FormAssociatedElement`)
 **Crucial for solving form submission issues.** Extend this for any component that should work inside a native `<form>`.
 
-**File:** `packages/ui-library/src/foundations/form-associated-element.ts`
+**File:** `packages/lit-ui-library/src/foundations/form-associated-element.ts`
 ```typescript
 import { property } from 'lit/decorators.js';
 import { UiElement } from './base-element.js';
@@ -239,7 +239,7 @@ export abstract class FormAssociatedElement extends UiElement {
 
 For superior TypeScript developer experience, define custom event interfaces for your components. This allows consumers to strongly type their event listeners.
 
-**File:** `packages/ui-library/src/types/events.ts`
+**File:** `packages/lit-ui-library/src/types/events.ts`
 ```typescript
 /**
  * Event interfaces for library components.
@@ -281,7 +281,7 @@ src/components/button/
 ```
 
 ### 4.2. Example: Implementing a Button
-**File:** `packages/ui-library/src/components/button/button.styles.ts`
+**File:** `packages/lit-ui-library/src/components/button/button.styles.ts`
 ```typescript
 import { css } from 'lit';
 
@@ -322,7 +322,7 @@ export const buttonStyles = css`
 `;
 ```
 
-**File:** `packages/ui-library/src/components/button/button.ts`
+**File:** `packages/lit-ui-library/src/components/button/button.ts`
 ```typescript
 import { html } from 'lit';
 import { property } from 'lit/decorators.js';
@@ -373,7 +373,7 @@ export class Button extends UiElement {
 ```
 
 ### 4.3. Example: Implementing an Input (Form-Associated)
-**File:** `packages/ui-library/src/components/input/input.ts`
+**File:** `packages/lit-ui-library/src/components/input/input.ts`
 ```typescript
 import { html } from 'lit';
 import { property } from 'lit/decorators.js';
@@ -422,7 +422,7 @@ export class Input extends FormAssociatedElement {
 Every component and its public API must be documented using JSDoc comments. This enables IDE IntelliSense and can be used to generate formal API documentation.
 
 **Example (for Button component):**
-**File:** `packages/ui-library/src/components/button/button.ts`
+**File:** `packages/lit-ui-library/src/components/button/button.ts`
 ```typescript
 /**
  * A customizable button component.
@@ -454,7 +454,7 @@ export class Button extends UiElement {
 
 Each component directory should include an index file that handles automatic registration of the custom element. This ensures components are immediately available as HTML tags when imported.
 
-**File:** `packages/ui-library/src/components/button/index.ts`
+**File:** `packages/lit-ui-library/src/components/button/index.ts`
 ```typescript
 import { Button } from './button.js';
 
@@ -466,7 +466,7 @@ if (!customElements.get('ui-button')) {
 export { Button };
 ```
 
-**File:** `packages/ui-library/src/components/input/index.ts`
+**File:** `packages/lit-ui-library/src/components/input/index.ts`
 ```typescript
 import { Input } from './input.js';
 
@@ -480,7 +480,7 @@ export { Input };
 
 ## 5. Testing Standards
 
-**File:** `packages/ui-library/src/components/button/button.test.ts`
+**File:** `packages/lit-ui-library/src/components/button/button.test.ts`
 ```typescript
 import { fixture, expect, html } from '@open-wc/testing';
 import { Button } from './button.js';
@@ -514,7 +514,7 @@ describe('Button', () => {
 
 ## 6. Exporting and Building
 
-**File:** `packages/ui-library/src/index.ts` (Barrel Exports)
+**File:** `packages/lit-ui-library/src/index.ts` (Barrel Exports)
 ```typescript
 // Foundations
 export { UiElement } from './foundations/base-element.js';
@@ -527,7 +527,7 @@ export { Input } from './components/input/index.js';
 // ... export all other components
 ```
 
-**File:** `packages/ui-library/vite.config.ts`
+**File:** `packages/lit-ui-library/vite.config.ts`
 ```typescript
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
@@ -537,8 +537,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'UiLibrary',
-      fileName: (format) => `ui-library.${format}.js`,
+      name: 'LitUIKit',
+      fileName: (format) => `lit-ui-library.${format}.js`,
       formats: ['es', 'cjs'],
     },
     sourcemap: true,
