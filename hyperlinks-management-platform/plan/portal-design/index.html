@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
+    <title>Zlinkly - Powerful Link Management Made Simple</title>
+    <meta name="description"
+        content="Transform your long URLs into powerful, trackable links. Create QR codes, build landing pages, and get deep analytics - all in one platform.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Essential custom animations that can't be easily replaced with Tailwind */
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes modal-entrance {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .floating { animation: floating 6s ease-in-out infinite; }
+        .gradient-bg {
+            background: linear-gradient(-45deg, #0f172a, #1e293b, #0f172a, #334155);
+            background-size: 400% 400%;
+            animation: gradient-shift 15s ease infinite;
+        }
+        .hero-pattern {
+            background-image: radial-gradient(circle at 1px 1px, rgba(45, 212, 191, 0.15) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #14b8a6, #06b6d4, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .modal-entrance { animation: modal-entrance 0.3s ease-out forwards; }
+
+        /* Mobile menu transition */
+        .mobile-menu {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .mobile-menu.open { transform: translateX(0); }
+
+        /* Scroll behavior */
+        html { scroll-behavior: smooth; }
+        
+        /* Prevent scroll when modal is open */
+        .no-scroll { overflow: hidden; }
+
+        /* Reduce motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            .floating, .gradient-bg, .modal-entrance { animation: none; }
+            html { scroll-behavior: auto; }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 text-gray-200 overflow-x-hidden">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-900 z-[10000] flex items-center justify-center transition-opacity duration-500">
+        <div class="w-12 h-12 border-3 border-teal-500/30 border-t-teal-400 rounded-full animate-spin"></div>
+    </div>
+
+    <!-- Scroll Progress Indicator -->
+    <div class="fixed top-16 left-0 h-1 bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-500 z-[60] transition-all duration-300 ease-out"
+        id="scroll-progress"></div>
+
+    <!-- Navigation -->
+    <nav class="backdrop-blur-xl bg-slate-900/80 border-b border-white/10 text-white fixed w-full top-0 z-50 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="#" class="flex items-center text-2xl font-bold text-white">
+                        <div class="w-8 h-8 mr-3 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5L21 3M21 3h-7M21 3v7M10.5 13.5L3 21M3 21h7M3 21v-7M14 7L7 14" />
+                            </svg>
+                        </div>
+                        Zlinkly
+                    </a>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#features" class="hover:text-teal-400 transition-colors duration-200 font-medium">Features</a>
+                    <a href="#testimonials" class="hover:text-teal-400 transition-colors duration-200 font-medium">Testimonials</a>
+                    <a href="#pricing" class="hover:text-teal-400 transition-colors duration-200 font-medium">Pricing</a>
+                    <a href="#about" class="hover:text-teal-400 transition-colors duration-200 font-medium">About</a>
+                    <a href="#contact" class="hover:text-teal-400 transition-colors duration-200 font-medium">Contact</a>
+                    <div class="flex items-center space-x-4 ml-6">
+                        <a href="/login" class="hover:text-teal-400 transition-colors duration-200 font-medium">Sign In</a>
+                        <a href="/register" class="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 px-6 py-2.5 rounded-full font-semibold transition-all transform hover:scale-105 shadow-lg">
+                            Get Started
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="mobile-menu md:hidden fixed inset-y-0 left-0 w-64 z-50 shadow-2xl">
+            <div class="p-6 bg-slate-900 border-r border-white/30 h-full">
+                <div class="flex justify-between items-center mb-8">
+                    <span class="text-xl font-bold text-white">Menu</span>
+                    <button id="mobile-menu-close" class="text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <nav class="space-y-4">
+                    <a href="#features" class="block py-3 hover:text-teal-400 transition-colors font-medium">Features</a>
+                    <a href="#testimonials" class="block py-3 hover:text-teal-400 transition-colors font-medium">Testimonials</a>
+                    <a href="#pricing" class="block py-3 hover:text-teal-400 transition-colors font-medium">Pricing</a>
+                    <a href="#about" class="block py-3 hover:text-teal-400 transition-colors font-medium">About</a>
+                    <a href="#contact" class="block py-3 hover:text-teal-400 transition-colors font-medium">Contact</a>
+                    <div class="pt-6 border-t border-white/20">
+                        <a href="/login" class="block py-3 hover:text-teal-400 transition-colors font-medium">Sign In</a>
+                        <a href="/register" class="block mt-3 bg-gradient-to-r from-teal-500 to-cyan-500 px-6 py-3 rounded-full transition-colors text-center font-semibold">
+                            Get Started
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg hero-pattern relative min-h-screen flex items-center justify-center text-white overflow-hidden">
+        <!-- Animated Background Elements -->
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl floating"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl floating" style="animation-delay: -2s;"></div>
+            <div class="absolute top-1/2 right-1/3 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl floating" style="animation-delay: -4s;"></div>
+            <div class="absolute bottom-1/3 left-1/3 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl floating" style="animation-delay: -6s;"></div>
+        </div>
+
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="mb-8 opacity-0 translate-y-8 animate-fade-in-up">
+                <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black mb-8 leading-tight">
+                    Transform Your Links Into
+                    <span class="text-gradient block">Powerful Assets</span>
+                </h1>
+                <p class="text-lg sm:text-xl md:text-2xl text-slate-300 mb-8 max-w-3xl mx-auto">
+                    Turn your long URLs into powerful, trackable links. Create QR codes, build landing pages, and get deep analytics - all in one platform.
+                </p>
+
+                <!-- CTA Buttons -->
+                <div class="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
+                    <button class="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-10 py-5 rounded-2xl text-xl font-bold transition-all transform hover:scale-105 shadow-2xl">
+                        Start Your Free Trial
+                        <svg class="w-6 h-6 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Trust Indicators -->
+                <div class="mt-12 opacity-0 translate-y-4 animate-fade-in-up" style="animation-delay: 0.2s;">
+                    <p class="text-sm text-slate-400 mb-4">Trusted by 50,000+ businesses worldwide</p>
+                    <div class="flex flex-wrap justify-center items-center gap-8 opacity-60">
+                        <div class="text-2xl font-bold">TechCorp</div>
+                        <div class="text-2xl font-bold">StartupX</div>
+                        <div class="text-2xl font-bold">GrowthCo</div>
+                        <div class="text-2xl font-bold">ScaleUp</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+            <svg class="w-8 h-8 text-teal-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-24 bg-gradient-to-br from-slate-50 to-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20 opacity-0 translate-y-8" data-animate>
+                <div class="inline-block bg-teal-100 text-teal-800 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                    POWERFUL FEATURES
+                </div>
+                <h2 class="text-4xl sm:text-5xl md:text-6xl font-black text-slate-800 mb-6">
+                    Everything You Need to
+                    <span class="text-gradient">Dominate Links</span>
+                </h2>
+                <p class="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+                    From simple shortening to advanced analytics, our comprehensive suite of tools empowers you to maximize every click.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-white rounded-3xl p-8 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-slate-200 relative overflow-hidden group opacity-0 translate-y-8" data-animate>
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    <div class="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Smart Link Shortening</h3>
+                    <p class="text-slate-600 leading-relaxed">Create custom short links with memorable aliases. Perfect for social media, marketing campaigns, and professional communications with full branding control.</p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="bg-white rounded-3xl p-8 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-slate-200 relative overflow-hidden group opacity-0 translate-y-8" data-animate>
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Advanced Analytics</h3>
+                    <p class="text-slate-600 leading-relaxed">Track clicks, geographic data, device types, and referrers with real-time insights. Get detailed analytics to optimize your marketing strategies and ROI.</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-slate-200 h-full flex flex-col relative overflow-hidden group opacity-0 translate-y-8" data-animate>
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Dynamic QR Codes</h3>
+                    <p class="text-slate-600 leading-relaxed">Generate beautiful, customizable QR codes that update automatically. Perfect for print materials, business cards, and seamless offline-to-online experiences.</p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-slate-200 h-full flex flex-col relative overflow-hidden group opacity-0 translate-y-8" data-animate>
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Landing Pages</h3>
+                    <p class="text-slate-600 leading-relaxed">Create stunning, conversion-optimized landing pages in minutes. Drag-and-drop builder with professional templates and A/B testing capabilities.</p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-slate-200 h-full flex flex-col relative overflow-hidden group opacity-0 translate-y-8" data-animate>
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Enterprise Security</h3>
+                    <p class="text-slate-600 leading-relaxed">Advanced security features including password protection, expiration dates, access controls, and compliance tools for enterprise-grade link management.</p>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-slate-200 h-full flex flex-col relative overflow-hidden group opacity-0 translate-y-8" data-animate>
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                    <div class="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4">Bulk Operations</h3>
+                    <p class="text-slate-600 leading-relaxed">Import, export, and manage thousands of links simultaneously. API integrations and team collaboration tools for large-scale campaigns and workflows.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-20 bg-gradient-to-r from-teal-600 to-cyan-600 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div class="opacity-0 translate-y-4" data-animate data-counter="50000">
+                    <div class="text-4xl md:text-5xl font-black mb-2 tabular-nums">50,000+</div>
+                    <div class="text-lg opacity-90">Active Users</div>
+                </div>
+                <div class="opacity-0 translate-y-4" data-animate data-counter="10000000">
+                    <div class="text-4xl md:text-5xl font-black mb-2 tabular-nums">10M+</div>
+                    <div class="text-lg opacity-90">Links Created</div>
+                </div>
+                <div class="opacity-0 translate-y-4" data-animate>
+                    <div class="text-4xl md:text-5xl font-black mb-2 tabular-nums">99.9%</div>
+                    <div class="text-lg opacity-90">Uptime</div>
+                </div>
+                <div class="opacity-0 translate-y-4" data-animate data-counter="150">
+                    <div class="text-4xl md:text-5xl font-black mb-2 tabular-nums">150+</div>
+                    <div class="text-lg opacity-90">Countries</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-24 bg-gradient-to-br from-slate-100 to-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20 opacity-0 translate-y-8" data-animate>
+                <div class="inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                    TESTIMONIALS
+                </div>
+                <h2 class="text-4xl sm:text-5xl md:text-6xl font-black text-slate-800 mb-6">
+                    What Our Users
+                    <span class="text-gradient">Are Saying</span>
+                </h2>
+                <p class="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+                    Join thousands of satisfied customers who trust Zlinkly for their link management needs.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Testimonial 1 -->
+                <div class="bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-lg rounded-3xl p-8 shadow-lg border border-white/20 opacity-0 translate-y-8" data-animate>
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+                            S
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800">Sarah Johnson</h4>
+                            <p class="text-slate-600 text-sm">Marketing Director, TechStart</p>
+                        </div>
+                    </div>
+                    <div class="flex mb-4 space-x-1">
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                    </div>
+                    <p class="text-slate-700 leading-relaxed">"Zlinkly has transformed our marketing campaigns. The analytics are incredible and the custom domains feature helps maintain our brand consistency across all platforms."</p>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-lg rounded-3xl p-8 shadow-lg border border-white/20 opacity-0 translate-y-8" data-animate>
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+                            M
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800">Mike Chen</h4>
+                            <p class="text-slate-600 text-sm">CEO, GrowthHack</p>
+                        </div>
+                    </div>
+                    <div class="flex mb-4 space-x-1">
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                    </div>
+                    <p class="text-slate-700 leading-relaxed">"The bulk operations feature is a game-changer for our agency. We can manage thousands of client links effortlessly. The API integration is seamless too!"</p>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-lg rounded-3xl p-8 shadow-lg border border-white/20 opacity-0 translate-y-8" data-animate>
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+                            E
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800">Emily Rodriguez</h4>
+                            <p class="text-slate-600 text-sm">Content Creator</p>
+                        </div>
+                    </div>
+                    <div class="flex mb-4 space-x-1">
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                    </div>
+                    <p class="text-slate-700 leading-relaxed">"Perfect for my social media strategy! The QR codes and landing page builder have helped me drive more traffic and track my audience engagement like never before."</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-24 bg-gradient-to-br from-slate-800 to-slate-900 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20 opacity-0 translate-y-8" data-animate>
+                <div class="inline-block bg-teal-500/20 text-teal-400 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                    PRICING PLANS
+                </div>
+                <h2 class="text-4xl sm:text-5xl md:text-6xl font-black mb-6 text-white">
+                    Choose Your
+                    <span class="text-gradient">Perfect Plan</span>
+                </h2>
+                <p class="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+                    Transparent pricing with no hidden fees. Scale up or down as your needs change.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 auto-rows-fr">
+                <!-- Free Plan -->
+                <div class="backdrop-blur-xl bg-slate-900/80 border border-white/10 rounded-3xl p-8 hover:shadow-2xl transition-all duration-300 opacity-0 translate-y-8" data-animate>
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold mb-2 text-white">Starter</h3>
+                        <div class="text-5xl font-black mb-2 text-white">$0</div>
+                        <p class="text-slate-300">Perfect for personal use</p>
+                    </div>
+                    <button class="w-full bg-white/10 hover:bg-white/20 text-white py-4 rounded-2xl font-bold transition-all border border-white/20 hover:border-white/40 mb-8">
+                        Get Started Free
+                    </button>
+                    <ul class="space-y-4">
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>100 links per month</span>
+                        </li>
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Basic analytics</span>
+                        </li>
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>QR code generation</span>
+                        </li>
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Community support</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="backdrop-blur-xl bg-slate-900/80 border-2 border-teal-500 rounded-3xl p-8 hover:shadow-2xl transition-all duration-300 relative transform scale-105 opacity-0 translate-y-8" data-animate>
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <span class="bg-gradient-to-r from-teal-500 to-cyan-500 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
+                            MOST POPULAR
+                        </span>
+                    </div>
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold mb-2 text-white">Professional</h3>
+                        <div class="text-5xl font-black mb-2 text-white">$29</div>
+                        <p class="text-slate-300">For growing businesses</p>
+                    </div>
+                    <button class="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white py-4 rounded-2xl font-bold transition-all transform hover:scale-105 mb-8 shadow-lg">
+                        Start Free Trial
+                    </button>
+                    <ul class="space-y-4">
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>10,000 links per month</span>
+                        </li>
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Advanced analytics & insights</span>
+                        </li>
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Custom domains</span>
+                        </li>
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Landing page builder</span>
+                        </li>
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Team collaboration</span>
+                        </li>
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Priority support</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="backdrop-blur-xl bg-slate-900/80 border border-white/10 rounded-3xl p-8 hover:shadow-2xl transition-all duration-300 opacity-0 translate-y-8" data-animate>
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold mb-2 text-white">Enterprise</h3>
+                        <div class="text-5xl font-black mb-2 text-white">$99</div>
+                        <p class="text-slate-300">For large organizations</p>
+                    </div>
+                    <button class="w-full bg-white/10 hover:bg-white/20 text-white py-4 rounded-2xl font-bold transition-all border border-white/20 hover:border-white/40 mb-8">
+                        Contact Sales
+                    </button>
+                    <ul class="space-y-4">
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Unlimited links</span>
+                        </li>
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Enterprise analytics</span>
+                        </li>
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Full API access</span>
+                        </li>
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>SSO & advanced security</span>
+                        </li>
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Dedicated account manager</span>
+                        </li>
+                        <li class="flex items-center text-slate-300">
+                            <svg class="w-6 h-6 text-teal-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>24/7 premium support</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Money Back Guarantee -->
+            <div class="text-center mt-16 opacity-0 translate-y-4" data-animate>
+                <div class="backdrop-blur-xl bg-slate-900/80 border border-white/10 rounded-2xl p-6 inline-flex items-center space-x-4">
+                    <svg class="w-8 h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    <span class="text-lg font-semibold text-white">30-day money-back guarantee • No setup fees • Cancel anytime</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-24 bg-white">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 opacity-0 translate-y-8" data-animate>
+                <div class="inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                    OUR STORY
+                </div>
+                <h2 class="text-4xl sm:text-5xl font-black text-slate-800 mb-6">
+                    Empowering Digital
+                    <span class="text-gradient">Connections</span>
+                </h2>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="opacity-0 translate-x-8" data-animate>
+                    <p class="text-xl text-slate-600 mb-6 leading-relaxed">
+                        Zlinkly was born from a simple belief: every link should be powerful, trackable, and beautiful. We're on a mission to transform how individuals and businesses manage their digital presence through intelligent link management.
+                    </p>
+                    <p class="text-lg text-slate-500 mb-8 leading-relaxed">
+                        Whether you're a marketer optimizing campaigns, a creator building your brand, or a developer integrating link management into your workflow, Zlinkly provides the tools and insights you need to succeed in the digital age.
+                    </p>
+                    <p class="text-lg text-slate-500 leading-relaxed">
+                        Join us on this journey to make the internet more connected, one link at a time. Together, we can create a smarter, more efficient web experience for everyone.
+                    </p>
+                </div>
+
+                <div class="relative opacity-0 -translate-x-8" data-animate>
+                    <div class="bg-gradient-to-br from-teal-50 to-blue-50 rounded-3xl p-8">
+                        <div class="text-center">
+                            <div class="w-24 h-24 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+                                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5L21 3M21 3h-7M21 3v7M10.5 13.5L3 21M3 21h7M3 21v-7M14 7L7 14" />
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-4">Built with ❤️ in Sweden</h3>
+                            <p class="text-slate-600">Founded in 2025 by a team passionate about making the internet more connected and trackable, one link at a time.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="contact" class="py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white relative overflow-hidden">
+        <!-- Background Effects -->
+        <div class="absolute inset-0">
+            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl floating"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl floating" style="animation-delay: -3s;"></div>
+        </div>
+
+        <div class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="opacity-0 translate-y-8" data-animate>
+                <div class="inline-block bg-teal-500/20 text-teal-400 px-4 py-2 rounded-full text-sm font-semibold mb-6">
+                    GET STARTED TODAY
+                </div>
+                <h2 class="text-4xl sm:text-5xl md:text-6xl font-black mb-6 text-white">
+                    Ready to Transform
+                    <span class="text-gradient block">Your Links?</span>
+                </h2>
+                <p class="text-xl text-slate-300 mb-12 max-w-2xl mx-auto leading-relaxed">
+                    Join thousands of businesses using Zlinkly to create, manage, and track their links effectively. Start your free trial today.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-6 justify-center mb-12">
+                    <button class="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-10 py-5 rounded-2xl text-xl font-bold transition-all transform hover:scale-105 shadow-2xl">
+                        Start Your Free Trial
+                        <svg class="w-6 h-6 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                    </button>
+                    <button class="backdrop-blur-xl bg-slate-900/80 border-2 border-white/30 hover:border-teal-400 text-white px-10 py-5 rounded-2xl text-xl font-bold transition-all hover:bg-white/10 shadow-xl">
+                        <svg class="w-6 h-6 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        Contact Sales
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="fixed inset-0 z-[99999] bg-black/50 backdrop-blur-sm p-4 overflow-y-auto opacity-0 invisible transition-all duration-300">
+        <div class="flex items-center justify-center min-h-full">
+            <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto shadow-2xl transform scale-95 opacity-0 transition-all duration-300">
+                <div class="flex flex-col md:flex-row">
+                    <!-- Left side (gradient) -->
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-700 text-white hidden md:flex md:w-2/5">
+                        <div class="flex flex-col justify-center items-center p-8 text-center">
+                            <div class="w-24 h-24 mb-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                                <svg class="w-16 h-16 text-teal-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5L21 3M21 3h-7M21 3v7M10.5 13.5L3 21M3 21h7M3 21v-7M14 7L7 14" />
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold mb-4">Welcome Back!</h2>
+                            <p class="text-slate-300">Login to access your powerful link management dashboard and analytics.</p>
+                        </div>
+                    </div>
+
+                    <!-- Right side (form) -->
+                    <div class="relative p-8 md:w-3/5">
+                        <button id="login-modal-close" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                        <div class="flex justify-center mb-6 md:hidden">
+                            <svg class="h-10 w-10 text-teal-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5L21 3M21 3h-7M21 3v7M10.5 13.5L3 21M3 21h7M3 21v-7M14 7L7 14" />
+                            </svg>
+                        </div>
+                        <h1 class="text-2xl font-bold text-slate-800 mb-6 text-center">Login to Your Account</h1>
+
+                        <form id="login-form" class="space-y-4">
+                            <div>
+                                <label for="login-identifier" class="block text-sm font-medium text-slate-700 mb-1">Email or Username</label>
+                                <input type="text" id="login-identifier" name="identifier" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition text-slate-800" placeholder="john.doe@example.com or john.doe">
+                                <p id="login-identifier-error" class="mt-1 text-xs text-red-600 hidden"></p>
+                            </div>
+
+                            <div>
+                                <label for="login-password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                                <div class="relative">
+                                    <input type="password" id="login-password" name="password" required class="w-full px-4 py-3 pr-10 rounded-xl border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition text-slate-800" placeholder="••••••••">
+                                    <button type="button" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none" data-password-toggle="login-password">
+                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20" data-eye="closed">
+                                            <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" />
+                                            <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                                        </svg>
+                                        <svg class="h-5 w-5 hidden" fill="currentColor" viewBox="0 0 20 20" data-eye="open">
+                                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p id="login-password-error" class="mt-1 text-xs text-red-600 hidden"></p>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500">
+                                    <label for="remember-me" class="block text-sm text-slate-700 whitespace-nowrap">Remember me</label>
+                                </div>
+                                <a href="#" class="text-sm font-medium text-teal-600 hover:text-teal-500 whitespace-nowrap">Forgot password?</a>
+                            </div>
+
+                            <button type="submit" class="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white py-3 px-4 rounded-xl font-bold shadow-md hover:shadow-lg transition-all transform hover:scale-[1.01]">
+                                Login
+                            </button>
+
+                            <div class="relative my-6">
+                                <div class="absolute inset-0 flex items-center">
+                                    <div class="w-full border-t border-slate-300"></div>
+                                </div>
+                                <div class="relative flex justify-center text-sm">
+                                    <span class="px-2 bg-white text-slate-500">Or continue with</span>
+                                </div>
+                            </div>
+
+                            <button type="button" class="w-full flex items-center justify-center gap-2 bg-white border border-slate-300 text-slate-700 py-3 px-4 rounded-xl font-medium shadow-sm hover:bg-slate-50 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"></path>
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"></path>
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"></path>
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"></path>
+                                    <path fill="none" d="M1 1h22v22H1z"></path>
+                                </svg>
+                                Sign in with Google
+                            </button>
+
+                            <div class="text-center text-sm text-slate-500">
+                                Don't have an account? <button id="show-register-link" class="font-medium text-teal-600 hover:text-teal-500">Sign up</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="register-modal" class="fixed inset-0 z-[99999] bg-black/50 backdrop-blur-sm p-4 overflow-y-auto opacity-0 invisible transition-all duration-300">
+        <div class="flex items-center justify-center min-h-full">
+            <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto shadow-2xl transform scale-95 opacity-0 transition-all duration-300">
+                <div class="flex flex-col md:flex-row">
+                    <!-- Left side (gradient) -->
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-700 text-white hidden md:flex md:w-2/5">
+                        <div class="flex flex-col justify-center items-center p-8 text-center">
+                            <div class="w-24 h-24 mb-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                                <svg class="w-16 h-16 text-teal-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5L21 3M21 3h-7M21 3v7M10.5 13.5L3 21M3 21h7M3 21v-7M14 7L7 14" />
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold mb-4">Join Zlinkly now!</h2>
+                            <p class="text-slate-300">Create an account to start managing your links with powerful analytics and customization.</p>
+                        </div>
+                    </div>
+
+                    <!-- Right side (form) -->
+                    <div class="relative p-8 md:w-3/5">
+                        <button id="register-modal-close" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                        <div class="flex justify-center mb-6 md:hidden">
+                            <svg class="h-10 w-10 text-teal-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5L21 3M21 3h-7M21 3v7M10.5 13.5L3 21M3 21h7M3 21v-7M14 7L7 14" />
+                            </svg>
+                        </div>
+                        <h1 class="text-2xl font-bold text-slate-800 mb-6 text-center">Create your account</h1>
+
+                        <form id="register-form" class="space-y-4">
+                            <div>
+                                <label for="register-username" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                                <input type="text" id="register-username" name="username" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition text-slate-800" placeholder="john.doe">
+                                <p class="text-xs text-slate-500 mt-1">Choose a unique username for your account</p>
+                                <p id="register-username-error" class="mt-1 text-xs text-red-600 hidden"></p>
+                            </div>
+
+                            <div>
+                                <label for="register-email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                                <input type="email" id="register-email" name="email" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition text-slate-800" placeholder="john.doe@example.com">
+                                <p class="text-xs text-slate-500 mt-1">We'll never share your email with anyone else.</p>
+                                <p id="register-email-error" class="mt-1 text-xs text-red-600 hidden"></p>
+                            </div>
+
+                            <div>
+                                <label for="register-password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                                <div class="relative">
+                                    <input type="password" id="register-password" name="password" required class="w-full px-4 py-3 pr-10 rounded-xl border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition text-slate-800" placeholder="••••••••">
+                                    <button type="button" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none" data-password-toggle="register-password">
+                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20" data-eye="closed">
+                                            <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" />
+                                            <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                                        
+                                        
+                                        
+                                        
+                                        </svg>
+                                        <svg class="h-5 w-5 hidden" fill="currentColor" viewBox="0 0 20 20" data-eye="open">
+                                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p id="register-password-error" class="mt-1 text-xs text-red-600 hidden"></p>
+                            </div>
+
+                            <div>
+                                <label for="register-confirm-password" class="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
+                                <div class="relative">
+                                    <input type="password" id="register-confirm-password" name="confirm-password" required class="w-full px-4 py-3 pr-10 rounded-xl border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition text-slate-800" placeholder="••••••••">
+                                    <button type="button" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none" data-password-toggle="register-confirm-password">
+                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20" data-eye="closed">
+                                            <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" />
+                                            <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                                        </svg>
+                                        <svg class="h-5 w-5 hidden" fill="currentColor" viewBox="0 0 20 20" data-eye="open">
+                                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p id="register-confirm-password-error" class="mt-1 text-xs text-red-600 hidden"></p>
+                            </div>
+
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input id="terms" name="terms" type="checkbox" required class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500">
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="terms" class="text-slate-700">I agree to the <a href="#" class="font-medium text-teal-600 hover:text-teal-500">Terms of Service</a> and <a href="#" class="font-medium text-teal-600 hover:text-teal-500">Privacy Policy</a></label>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white py-3 px-4 rounded-xl font-bold shadow-md hover:shadow-lg transition-all transform hover:scale-[1.01]">
+                                Create account
+                            </button>
+
+                            <div class="relative my-6">
+                                <div class="absolute inset-0 flex items-center">
+                                    <div class="w-full border-t border-slate-300"></div>
+                                </div>
+                                <div class="relative flex justify-center text-sm">
+                                    <span class="px-2 bg-white text-slate-500">Or continue with</span>
+                                </div>
+                            </div>
+
+                            <button type="button" class="w-full flex items-center justify-center gap-2 bg-white border border-slate-300 text-slate-700 py-3 px-4 rounded-xl font-medium shadow-sm hover:bg-slate-50 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"></path>
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"></path>
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"></path>
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"></path>
+                                    <path fill="none" d="M1 1h22v22H1z"></path>
+                                </svg>
+                                Sign up with Google
+                            </button>
+
+                            <div class="text-center text-sm text-slate-500">
+                                Already have an account? <button id="show-login-link" class="font-medium text-teal-600 hover:text-teal-500">Sign in</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-300 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+                <h3 class="text-white text-lg font-semibold mb-4">Zlinkly</h3>
+                <p class="text-sm text-slate-400">Powerful link management made simple. Shorten, brand, and track your links with enterprise-grade analytics and security</p>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold mb-4">Product</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#features" class="hover:text-teal-400 transition-colors">Features</a></li>
+                    <li><a href="#pricing" class="hover:text-teal-400 transition-colors">Pricing</a></li>
+                    <li><a href="#about" class="hover:text-teal-400 transition-colors">About</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold mb-4">Company</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" class="hover:text-teal-400 transition-colors">Blog</a></li>
+                    <li><a href="#contact" class="hover:text-teal-400 transition-colors">Contact</a></li>
+                    <li><a href="#" class="hover:text-teal-400 transition-colors">Careers</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold mb-4">Legal</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" class="hover:text-teal-400 transition-colors">Terms of Service</a></li>
+                    <li><a href="#" class="hover:text-teal-400 transition-colors">Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="mt-12 text-center text-xs text-slate-500">
+            &copy; 2025 Zlinkly. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Tailwind config for additional animations
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+                        'fade-in-left': 'fadeInLeft 0.8s ease-out forwards',
+                        'fade-in-right': 'fadeInRight 0.8s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(30px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        fadeInLeft: {
+                            '0%': { opacity: '0', transform: 'translateX(-50px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' }
+                        },
+                        fadeInRight: {
+                            '0%': { opacity: '0', transform: 'translateX(50px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Loading animation
+        window.addEventListener('load', () => {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            setTimeout(() => {
+                loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
+            }, 1000);
+        });
+
+        // Scroll progress indicator
+        window.addEventListener('scroll', () => {
+            const scrollTop = document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const progress = (scrollTop / scrollHeight) * 100;
+            document.getElementById('scroll-progress').style.width = progress + '%';
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.remove('opacity-0', 'translate-y-8', 'translate-y-4', 'translate-x-8', '-translate-x-8');
+                    entry.target.classList.add('opacity-100', 'translate-y-0', 'translate-x-0');
+
+                    // Animate counters
+                    const counter = entry.target.getAttribute('data-counter');
+                    if (counter) {
+                        const target = parseInt(counter);
+                        const element = entry.target.querySelector('.tabular-nums');
+                        let current = 0;
+                        const increment = target / 50;
+                        const timer = setInterval(() => {
+                            current += increment;
+                            if (current >= target) {
+                                current = target;
+                                clearInterval(timer);
+                            }
+                            const suffix = element.innerText.match(/[^\d]+$/)?.[0] || '';
+                            element.innerText = Math.floor(current).toLocaleString() + suffix;
+                        }, 30);
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // Observe all elements with data-animate
+        document.querySelectorAll('[data-animate]').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Mobile menu functionality
+        const mobileMenu = document.getElementById('mobile-menu');
+        const openBtn = document.getElementById('mobile-menu-btn');
+        const closeBtn = document.getElementById('mobile-menu-close');
+
+        openBtn.addEventListener('click', () => {
+            mobileMenu.classList.add('open');
+            document.body.classList.add('no-scroll');
+        });
+
+        closeBtn.addEventListener('click', () => {
+            mobileMenu.classList.remove('open');
+            document.body.classList.remove('no-scroll');
+        });
+
+        // Close mobile menu when clicking on links
+        mobileMenu.querySelectorAll('a[href^="#"]').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.remove('open');
+                document.body.classList.remove('no-scroll');
+            });
+        });
+
+        // Modal functionality
+        const loginModal = document.getElementById('login-modal');
+        const registerModal = document.getElementById('register-modal');
+
+        function showModal(modal) {
+            document.body.classList.add('no-scroll');
+            modal.classList.remove('opacity-0', 'invisible');
+            modal.classList.add('opacity-100', 'visible');
+            const content = modal.querySelector('.bg-white');
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
+        }
+
+        function hideModal(modal) {
+            document.body.classList.remove('no-scroll');
+            const content = modal.querySelector('.bg-white');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.remove('opacity-100', 'visible');
+                modal.classList.add('opacity-0', 'invisible');
+            }, 300);
+        }
+
+        // Modal event listeners
+        document.querySelectorAll('a[href="/login"]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showModal(loginModal);
+            });
+        });
+
+        document.querySelectorAll('a[href="/register"]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showModal(registerModal);
+            });
+        });
+
+        document.getElementById('login-modal-close').addEventListener('click', () => hideModal(loginModal));
+        document.getElementById('register-modal-close').addEventListener('click', () => hideModal(registerModal));
+
+        document.getElementById('show-register-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            hideModal(loginModal);
+            setTimeout(() => showModal(registerModal), 300);
+        });
+
+        document.getElementById('show-login-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            hideModal(registerModal);
+            setTimeout(() => showModal(loginModal), 300);
+        });
+
+        // Close modals when clicking outside
+        [loginModal, registerModal].forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    hideModal(modal);
+                }
+            });
+        });
+
+        // Close modals with escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (loginModal.classList.contains('visible')) hideModal(loginModal);
+                if (registerModal.classList.contains('visible')) hideModal(registerModal);
+            }
+        });
+
+        // Password toggle functionality
+        document.querySelectorAll('[data-password-toggle]').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-password-toggle');
+                const passwordInput = document.getElementById(targetId);
+                const eyeIcons = this.querySelectorAll('svg');
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    eyeIcons[0].classList.add('hidden');
+                    eyeIcons[1].classList.remove('hidden');
+                } else {
+                    passwordInput.type = 'password';
+                    eyeIcons[0].classList.remove('hidden');
+                    eyeIcons[1].classList.add('hidden');
+                }
+            });
+        });
+
+        // Form validation
+        const setupFormValidation = () => {
+            // Login form validation
+            const loginForm = document.getElementById('login-form');
+            const loginIdentifier = document.getElementById('login-identifier');
+            const loginPassword = document.getElementById('login-password');
+
+            const validateLoginIdentifier = () => {
+                const error = document.getElementById('login-identifier-error');
+                if (!loginIdentifier.value.trim()) {
+                    error.textContent = 'Email or username is required';
+                    error.classList.remove('hidden');
+                    loginIdentifier.classList.add('border-red-500');
+                    return false;
+                }
+                error.classList.add('hidden');
+                loginIdentifier.classList.remove('border-red-500');
+                return true;
+            };
+
+            const validateLoginPassword = () => {
+                const error = document.getElementById('login-password-error');
+                if (!loginPassword.value.trim()) {
+                    error.textContent = 'Password is required';
+                    error.classList.remove('hidden');
+                    loginPassword.classList.add('border-red-500');
+                    return false;
+                } else if (loginPassword.value.length < 8) {
+                    error.textContent = 'Password must be at least 8 characters';
+                    error.classList.remove('hidden');
+                    loginPassword.classList.add('border-red-500');
+                    return false;
+                }
+                error.classList.add('hidden');
+                loginPassword.classList.remove('border-red-500');
+                return true;
+            };
+
+            loginIdentifier.addEventListener('blur', validateLoginIdentifier);
+            loginPassword.addEventListener('blur', validateLoginPassword);
+
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (validateLoginIdentifier() && validateLoginPassword()) {
+                    console.log('Login form submitted');
+                }
+            });
+
+            // Register form validation
+            const registerForm = document.getElementById('register-form');
+            const registerUsername = document.getElementById('register-username');
+            const registerEmail = document.getElementById('register-email');
+            const registerPassword = document.getElementById('register-password');
+            const registerConfirmPassword = document.getElementById('register-confirm-password');
+            const termsCheckbox = document.getElementById('terms');
+
+            const validateUsername = () => {
+                const error = document.getElementById('register-username-error');
+                if (!registerUsername.value.trim()) {
+                    error.textContent = 'Username is required';
+                    error.classList.remove('hidden');
+                    registerUsername.classList.add('border-red-500');
+                    return false;
+                } else if (registerUsername.value.length < 3) {
+                    error.textContent = 'Username must be at least 3 characters';
+                    error.classList.remove('hidden');
+                    registerUsername.classList.add('border-red-500');
+                    return false;
+                }
+                error.classList.add('hidden');
+                registerUsername.classList.remove('border-red-500');
+                return true;
+            };
+
+            const validateEmail = () => {
+                const error = document.getElementById('register-email-error');
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!registerEmail.value.trim()) {
+                    error.textContent = 'Email is required';
+                    error.classList.remove('hidden');
+                    registerEmail.classList.add('border-red-500');
+                    return false;
+                } else if (!emailRegex.test(registerEmail.value)) {
+                    error.textContent = 'Please enter a valid email address';
+                    error.classList.remove('hidden');
+                    registerEmail.classList.add('border-red-500');
+                    return false;
+                }
+                error.classList.add('hidden');
+                registerEmail.classList.remove('border-red-500');
+                return true;
+            };
+
+            const validatePassword = () => {
+                const error = document.getElementById('register-password-error');
+                const password = registerPassword.value.trim();
+                
+                if (!password) {
+                    error.textContent = 'Password is required';
+                    error.classList.remove('hidden');
+                    registerPassword.classList.add('border-red-500');
+                    return false;
+                } else if (password.length < 8) {
+                    error.textContent = 'Password must be at least 8 characters';
+                    error.classList.remove('hidden');
+                    registerPassword.classList.add('border-red-500');
+                    return false;
+                } else {
+                    const hasNumber = /\d/.test(password);
+                    const hasSpecialChar = /[!@#$%^&*]/.test(password);
+                    const hasUpperCase = /[A-Z]/.test(password);
+                    
+                    if (!hasNumber || !hasSpecialChar || !hasUpperCase) {
+                        error.textContent = 'Must contain: number, special character (!@#$%^&*), uppercase letter';
+                        error.classList.remove('hidden');
+                        registerPassword.classList.add('border-red-500');
+                        return false;
+                    }
+                }
+                error.classList.add('hidden');
+                registerPassword.classList.remove('border-red-500');
+                return true;
+            };
+
+            const validateConfirmPassword = () => {
+                const error = document.getElementById('register-confirm-password-error');
+                if (!registerConfirmPassword.value.trim()) {
+                    error.textContent = 'Please confirm your password';
+                    error.classList.remove('hidden');
+                    registerConfirmPassword.classList.add('border-red-500');
+                    return false;
+                } else if (registerConfirmPassword.value !== registerPassword.value) {
+                    error.textContent = 'Passwords do not match';
+                    error.classList.remove('hidden');
+                    registerConfirmPassword.classList.add('border-red-500');
+                    return false;
+                }
+                error.classList.add('hidden');
+                registerConfirmPassword.classList.remove('border-red-500');
+                return true;
+            };
+
+            registerUsername.addEventListener('input', validateUsername);
+            registerEmail.addEventListener('input', validateEmail);
+            registerPassword.addEventListener('input', () => {
+                validatePassword();
+                if (registerConfirmPassword.value) validateConfirmPassword();
+            });
+            registerConfirmPassword.addEventListener('input', validateConfirmPassword);
+
+            registerForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (validateUsername() && validateEmail() && validatePassword() && validateConfirmPassword() && termsCheckbox.checked) {
+                    console.log('Register form submitted');
+                }
+            });
+        };
+
+        // Initialize form validation
+        setupFormValidation();
+    </script>
+</body>
+</html>

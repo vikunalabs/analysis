@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Zlinkly - Link Management</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    * {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .sidebar {
+      width: 16rem;
+      transition: all 0.3s ease;
+    }
+
+    .card {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-counter {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .mobile-menu {
+      transform: translateX(-100%);
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .mobile-menu.open {
+      transform: translateX(0);
+    }
+
+    .scroll-indicator {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #2dd4bf, #06b6d4);
+      z-index: 1000;
+      transition: width 0.3s ease;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 300px;
+      width: 100%;
+    }
+
+    .link-row:hover {
+      background-color: rgba(45, 212, 191, 0.05);
+    }
+
+    .sidebar-link.active {
+      background-color: rgba(45, 212, 191, 0.1);
+      border-left: 3px solid #2dd4bf;
+    }
+
+    .sidebar-link.active span {
+      color: #2dd4bf;
+    }
+
+    [x-cloak] {
+      display: none !important;
+    }
+
+    nav {
+      padding: 1rem 0.5rem;
+    }
+
+    .sidebar-link {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      /* text-sm */
+      transition: all 0.2s ease;
+      border-left: 2px solid transparent;
+      /* Add this for smooth border transition */
+    }
+
+    [x-transition] {
+      transition: all 0.2s ease-out;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-slate-50 text-gray-800 overflow-x-hidden">
+  <!-- Scroll Progress Indicator -->
+  <div class="scroll-indicator" id="scroll-progress"></div>
+
+  <!-- Dashboard Layout -->
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <div class="sidebar hidden md:flex md:flex-shrink-0 bg-slate-800 text-white w-64 flex-col">
+      <div class="flex items-center justify-center h-16 pr-3 border-b border-slate-700">
+        <a href="#" class="flex items-center text-2xl text-center font-bold text-teal-400">
+          <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M13.5 10.5L21 3M21 3h-7M21 3v7M10.5 13.5L3 21M3 21h7M3 21v-7M14 7L7 14" />
+          </svg>
+          Zlinkly
+        </a>
+      </div>
+      <div class="flex-grow overflow-y-auto">
+        <nav class="px-2 py-4 space-y-1 text-sm" x-data="{ settingsOpen: false }">
+          <!-- Dashboard Link -->
+          <a href="#" class="sidebar-link active flex items-center px-4 py-3 rounded-lg hover:bg-slate-700 hover:text-teal-400">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span>Dashboard</span>
+          </a>
+          <a href="./deepseek_mylinks.html" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-slate-700 hover:text-teal-400">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            <span>My Links</span>
+          </a>
+          <a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-slate-700 hover:text-teal-400">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span>Analytics</span>
+          </a>
+          <a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-slate-700 hover:text-teal-400">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+            </svg>
+            <span>QR Codes</span>
+          </a>
+          <a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-slate-700 hover:text-teal-400">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Landing Pages</span>
+          </a>
+          <!-- Settings Section -->
+          <div class="border-t border-slate-700 my-2"></div>
+
+          <div class="space-y-1">
+            <button @click="settingsOpen = !settingsOpen"
+              class="flex items-center w-full px-3 py-2 text-left rounded-lg hover:bg-slate-700 hover:text-teal-400 focus:outline-none group"
+              :class="{ 'text-teal-400 bg-slate-700': settingsOpen }">
+              <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span class="flex-1 text-left">Settings</span>
+              <svg class="w-4 h-4 transform transition-transform duration-200" :class="{ 'rotate-180': settingsOpen }"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <div x-show="settingsOpen" x-transition class="ml-8 space-y-1">
+              <a href="/settings/profile"
+                class="block px-3 py-2 rounded-lg hover:bg-slate-700 hover:text-teal-400 text-slate-300">Profile</a>
+              <a href="/settings/account"
+                class="block px-3 py-2 rounded-lg hover:bg-slate-700 hover:text-teal-400 text-slate-300">Account</a>
+              <a href="/settings/security"
+                class="block px-3 py-2 rounded-lg hover:bg-slate-700 hover:text-teal-400 text-slate-300">Security</a>
+              <a href="/settings/notifications"
+                class="block px-3 py-2 rounded-lg hover:bg-slate-700 hover:text-teal-400 text-slate-300">Notifications</a>
+              <a href="/settings/billing"
+                class="block px-3 py-2 rounded-lg hover:bg-slate-700 hover:text-teal-400 text-slate-300">Billing</a>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-700 my-2"></div>
+
+          <!-- Help & Support -->
+          <a href="#" class="sidebar-link flex items-center px-3 py-2 rounded-lg hover:bg-slate-700 hover:text-teal-400">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Help & Support</span>
+          </a>
+
+          <!-- Feedback -->
+          <a href="#" class="sidebar-link flex items-center px-3 py-2 rounded-lg hover:bg-slate-700 hover:text-teal-400">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+            </svg>
+            <span>Feedback</span>
+          </a>
+        </nav>
+      </div>
+
+      <!-- User profile section -->
+      <div class="p-4 border-t border-slate-700">
+        <div class="flex items-center">
+          <img src="https://randomuser.me/api/portraits/men/31.jpg" alt="User" class="w-8 h-8 rounded-full mr-3">
+          <div class="text-sm">
+            <div class="font-medium">John Doe</div>
+            <div class="text-slate-400">Pro Plan</div>
+          </div>
+        </div>
+        <a href="#" class="mt-3 flex items-center text-sm text-slate-400 hover:text-teal-400">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Sign Out
+        </a>
+      </div>
+    </div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobile-sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 md:hidden hidden"></div>
+
+    <!-- Mobile Sidebar -->
+    <div id="mobile-sidebar"
+      class="mobile-menu md:hidden fixed inset-y-0 left-0 w-64 z-50 bg-slate-800 text-white shadow-xl">
+      <div class="p-3">
+        <div class="flex justify-between items-center mb-4">
+          <span class="text-lg font-bold text-teal-400">Zlinkly</span>
+          <button id="mobile-sidebar-close" class="text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <nav class="space-y-1 text-sm" x-data="{ settingsOpen: false }">
+          <!-- Dashboard Link -->
+          <a href="#" class="sidebar-link active flex items-center px-4 py-3 rounded-lg">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span>Dashboard</span>
+          </a>
+          <a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-slate-700 hover:text-teal-400">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            <span>My Links</span>
+          </a>
+          <a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-slate-700 hover:text-teal-400">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span>Analytics</span>
+          </a>
+          <a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-slate-700 hover:text-teal-400">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+            </svg>
+            <span>QR Codes</span>
+          </a>
+          <a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg hover:bg-slate-700 hover:text-teal-400">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Landing Pages</span>
+          </a>
+          <!-- Divider -->
+          <div class="border-t border-slate-700 my-2"></div>
+
+          <!-- Settings Section -->
+          <div x-data="{ settingsOpen: false }" class="space-y-1">
+            <button @click="settingsOpen = !settingsOpen"
+              class="w-full flex items-center px-4 py-3 rounded-lg hover:bg-slate-700 hover:text-teal-400 focus:outline-none"
+              :class="{ 'bg-slate-700': settingsOpen }">
+              <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span class="flex-1 text-left">Settings</span>
+              <svg class="w-4 h-4 transform transition-transform duration-200" :class="{ 'rotate-180': settingsOpen }"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            <div x-show="settingsOpen" x-transition class="ml-8 space-y-1">
+              <a href="/settings/profile"
+                class="block px-3 py-2 rounded-lg hover:bg-slate-700 hover:text-teal-400 text-slate-300">Profile</a>
+              <a href="/settings/account"
+                class="block px-3 py-2 rounded-lg hover:bg-slate-700 hover:text-teal-400 text-slate-300">Account</a>
+              <a href="/settings/security"
+                class="block px-3 py-2 rounded-lg hover:bg-slate-700 hover:text-teal-400 text-slate-300">Security</a>
+              <a href="/settings/notifications"
+                class="block px-3 py-2 rounded-lg hover:bg-slate-700 hover:text-teal-400 text-slate-300">Notifications</a>
+              <a href="/settings/billing"
+                class="block px-3 py-2 rounded-lg hover:bg-slate-700 hover:text-teal-400 text-slate-300">Billing</a>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-700 my-2"></div>
+
+          <!-- Help & Support -->
+          <a href="#" class="sidebar-link flex items-center px-3 py-2 rounded-lg text-sm hover:bg-slate-700 hover:text-teal-400">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Help & Support</span>
+          </a>
+
+          <!-- Feedback -->
+          <a href="#" class="sidebar-link flex items-center px-3 py-2 rounded-lg text-sm hover:bg-slate-700 hover:text-teal-400">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+            </svg>
+            <span>Feedback</span>
+          </a>
+        </nav>
+
+        <div class="mt-6 pt-4 border-t border-slate-700">
+          <div class="flex items-center">
+            <img src="https://randomuser.me/api/portraits/men/31.jpg" alt="User" class="w-8 h-8 rounded-full mr-3">
+
+            <div class="text-sm"> 
+              <div class="font-medium">John Doe</div>
+              <div class="text-slate-400">Pro Plan</div>
+            </div>
+          </div>
+          <a href="#" class="mt-3 flex items-center text-sm text-slate-400 hover:text-teal-400">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Sign Out
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- Top Navigation -->
+      <header class="bg-white shadow-sm z-10">
+        <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+          <div class="flex items-center">
+            <button id="mobile-sidebar-toggle" class="md:hidden text-slate-600 mr-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 class="text-xl font-semibold text-slate-800">Dashboard</h1>
+          </div>
+          <div class="flex items-center space-x-4">
+            <button class="p-2 text-slate-600 hover:text-teal-500">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+            </button>
+            <div class="relative">
+              <button class="flex items-center space-x-2 focus:outline-none">
+                <img src="https://randomuser.me/api/portraits/men/31.jpg" alt="User" class="w-8 h-8 rounded-full">
+                <span class="hidden md:inline text-sm font-medium">John Doe</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content Area -->
+      <main class="flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-6 lg:p-8">
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-slate-500">Total Links</p>
+                <h3 class="text-2xl font-bold text-slate-800 stat-counter">1,248</h3>
+              </div>
+              <div class="p-3 rounded-lg bg-teal-100 text-teal-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+              </div>
+            </div>
+            <div class="mt-4">
+              <span class="text-sm text-slate-500">+12 this week</span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-slate-500">Total Clicks</p>
+                <h3 class="text-2xl font-bold text-slate-800 stat-counter">24,567</h3>
+              </div>
+              <div class="p-3 rounded-lg bg-blue-100 text-blue-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+            </div>
+            <div class="mt-4">
+              <span class="text-sm text-slate-500">+1,234 this week</span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-slate-500">Click Rate</p>
+                <h3 class="text-2xl font-bold text-slate-800">4.8%</h3>
+              </div>
+              <div class="p-3 rounded-lg bg-green-100 text-green-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 11l3-3m0 0l3 3m-3-3v8m0-13a9 9 0 110 18 9 9 0 010-18z" />
+                </svg>
+              </div>
+            </div>
+            <div class="mt-4">
+              <span class="text-sm text-green-500">+0.8% from last week</span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-slate-500">Top Link</p>
+                <h3 class="text-xl font-bold text-slate-800 truncate">zlink.ly/summer-sale</h3>
+              </div>
+              <div class="p-3 rounded-lg bg-purple-100 text-purple-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+              </div>
+            </div>
+            <div class="mt-4">
+              <span class="text-sm text-slate-500">8,765 clicks</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA Card -->
+        <div class="mb-8 bg-gradient-to-r from-teal-500 to-blue-500 rounded-xl shadow-lg overflow-hidden">
+          <div class="p-6 md:p-8 text-white">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+              <div class="mb-4 md:mb-0">
+                <h3 class="text-xl md:text-2xl font-bold mb-2">Upgrade to Enterprise</h3>
+                <p class="text-teal-100">Get unlimited links, advanced security, and priority support.</p>
+              </div>
+              <button
+                class="bg-white text-teal-600 hover:bg-slate-100 px-6 py-3 rounded-lg font-semibold transition-colors">
+                Upgrade Now
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <!-- Clicks Chart -->
+          <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-lg font-semibold text-slate-800">Clicks Overview</h3>
+              <select
+                class="text-sm border border-slate-200 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                <option>Last 7 days</option>
+                <option>Last 30 days</option>
+                <option>Last 90 days</option>
+              </select>
+            </div>
+            <div class="chart-container">
+              <canvas id="clicksChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Top Locations -->
+          <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-lg font-semibold text-slate-800">Top Locations</h3>
+              <select
+                class="text-sm border border-slate-200 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                <option>Last 7 days</option>
+                <option>Last 30 days</option>
+                <option>Last 90 days</option>
+              </select>
+            </div>
+            <div class="chart-container">
+              <canvas id="locationsChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Links & Quick Actions -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Recent Links -->
+          <div class="lg:col-span-2 bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100">
+              <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-slate-800">Recent Links</h3>
+                <a href="#" class="text-sm text-teal-500 hover:text-teal-600 font-medium">View All</a>
+              </div>
+            </div>
+            <div class="divide-y divide-slate-100">
+              <!-- Link Row 1 -->
+              <div class="link-row p-4 hover:bg-slate-50 transition-colors">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-4">
+                    <div class="p-2 bg-teal-100 rounded-lg text-teal-600">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                    </div>
+                    <div>
+                      <a href="#" class="font-medium text-slate-800 hover:text-teal-500">zlink.ly/summer-sale</a>
+                      <p class="text-sm text-slate-500 truncate max-w-xs">
+                        https://example.com/products/summer-collection-2023</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-medium text-slate-800">8,765</div>
+                    <div class="text-sm text-slate-500">clicks</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Link Row 2 -->
+              <div class="link-row p-4 hover:bg-slate-50 transition-colors">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-4">
+                    <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                    </div>
+                    <div>
+                      <a href="#" class="font-medium text-slate-800 hover:text-teal-500">zlink.ly/new-blog</a>
+                      <p class="text-sm text-slate-500 truncate max-w-xs">
+                        https://example.com/blog/10-tips-for-better-marketing</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-medium text-slate-800">3,421</div>
+                    <div class="text-sm text-slate-500">clicks</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Link Row 3 -->
+              <div class="link-row p-4 hover:bg-slate-50 transition-colors">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-4">
+                    <div class="p-2 bg-purple-100 rounded-lg text-purple-600">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                    </div>
+                    <div>
+                      <a href="#" class="font-medium text-slate-800 hover:text-teal-500">zlink.ly/product-x</a>
+                      <p class="text-sm text-slate-500 truncate max-w-xs">https://example.com/products/premium-product-x
+                      </p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-medium text-slate-800">2,876</div>
+                    <div class="text-sm text-slate-500">clicks</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Link Row 4 -->
+              <div class="link-row p-4 hover:bg-slate-50 transition-colors">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-4">
+                    <div class="p-2 bg-orange-100 rounded-lg text-orange-600">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                    </div>
+                    <div>
+                      <a href="#" class="font-medium text-slate-800 hover:text-teal-500">zlink.ly/event-reg</a>
+                      <p class="text-sm text-slate-500 truncate max-w-xs">
+                        https://example.com/events/annual-conference-2023</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-medium text-slate-800">1,543</div>
+                    <div class="text-sm text-slate-500">clicks</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="bg-white rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-slate-800 mb-6">Quick Actions</h3>
+            <div class="space-y-4">
+              <button
+                class="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                <div class="flex items-center">
+                  <div class="p-2 bg-teal-100 rounded-lg text-teal-600 mr-4">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                  </div>
+                  <span>Create New Link</span>
+                </div>
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              <button
+                class="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                <div class="flex items-center">
+                  <div class="p-2 bg-blue-100 rounded-lg text-blue-600 mr-4">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    </svg>
+                  </div>
+                  <span>Generate QR Code</span>
+                </div>
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              <button
+                class="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                <div class="flex items-center">
+                  <div class="p-2 bg-purple-100 rounded-lg text-purple-600 mr-4">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <span>Create Landing Page</span>
+                </div>
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              <button
+                class="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                <div class="flex items-center">
+                  <div class="p-2 bg-green-100 rounded-lg text-green-600 mr-4">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                  </div>
+                  <span>Export Data</span>
+                </div>
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-slate-100">
+              <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Recent Activity</h4>
+              <div class="space-y-4">
+                <div class="flex items-start">
+                  <div class="flex-shrink-0 mt-1">
+                    <div class="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm text-slate-800">You created <a href="#"
+                        class="text-teal-500 hover:text-teal-600">zlink.ly/summer-sale</a></p>
+                    <p class="text-xs text-slate-500">2 hours ago</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start">
+                  <div class="flex-shrink-0 mt-1">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm text-slate-800">Your link <a href="#"
+                        class="text-teal-500 hover:text-teal-600">zlink.ly/new-blog</a> received 124 clicks</p>
+                    <p class="text-xs text-slate-500">Yesterday</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start">
+                  <div class="flex-shrink-0 mt-1">
+                    <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm text-slate-800">You generated a QR code for <a href="#"
+                        class="text-teal-500 hover:text-teal-600">zlink.ly/product-x</a></p>
+                    <p class="text-xs text-slate-500">2 days ago</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script></script>
+</body>
+
+</html>
