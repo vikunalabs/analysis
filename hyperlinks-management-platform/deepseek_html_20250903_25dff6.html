@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShortlyPro - Advanced URL Shortener Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        dark: '#1F2937',
+                        premium: '#F59E0B'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-group {
+            margin-bottom: 1rem;
+        }
+        .sidebar-title {
+            padding: 0.75rem 1.5rem;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            color: #6B7280;
+            font-weight: 600;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: #4B5563;
+            transition: all 0.2s;
+        }
+        .nav-item:hover {
+            background-color: #F3F4F6;
+            color: #3B82F6;
+        }
+        .nav-item.active {
+            background-color: #EFF6FF;
+            color: #3B82F6;
+            border-left: 4px solid #3B82F6;
+        }
+        .nav-item i {
+            width: 1.5rem;
+            margin-right: 0.75rem;
+        }
+        .sub-item {
+            padding-left: 3.75rem;
+            font-size: 0.875rem;
+        }
+        .content-card {
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background: white;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        .stats-card {
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background: white;
+            padding: 1.5rem;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-md flex flex-col">
+            <div class="p-6 border-b">
+                <h1 class="text-2xl font-bold text-primary">
+                    <i class="fas fa-link mr-2"></i>ShortlyPro
+                </h1>
+                <p class="text-xs text-gray-500 mt-1">Premium URL Management</p>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto pt-4">
+                <!-- Main Navigation -->
+                <div class="sidebar-group">
+                    <div class="nav-item active">
+                        <i class="fas fa-home"></i>
+                        Dashboard
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-link"></i>
+                        My URLs
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-chart-bar"></i>
+                        Analytics
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-qrcode"></i>
+                        QR Codes
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-barcode"></i>
+                        Barcodes
+                    </div>
+                </div>
+
+                <!-- Content Management -->
+                <div class="sidebar-group">
+                    <p class="sidebar-title">Content</p>
+                    <div class="nav-item">
+                        <i class="fas fa-file-alt"></i>
+                        Landing Pages
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-pencil-alt"></i>
+                        Bio Profiles
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-font"></i>
+                        Custom Domains
+                    </div>
+                </div>
+
+                <!-- Account Management -->
+                <div class="sidebar-group">
+                    <p class="sidebar-title">Account</p>
+                    <div class="nav-item">
+                        <i class="fas fa-user"></i>
+                        Profile
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-users"></i>
+                        Team Management
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-shield-alt"></i>
+                        Security
+                    </div>
+                </div>
+
+                <!-- Billing Section -->
+                <div class="sidebar-group">
+                    <p class="sidebar-title">Billing</p>
+                    <div class="nav-item">
+                        <i class="fas fa-credit-card"></i>
+                        Subscription
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-money-bill-wave"></i>
+                        Payments
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        Invoices
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-receipt"></i>
+                        Billing History
+                    </div>
+                </div>
+
+                <!-- Additional Features -->
+                <div class="sidebar-group">
+                    <p class="sidebar-title">Features</p>
+                    <div class="nav-item">
+                        <i class="fas fa-bullhorn"></i>
+                        Campaigns
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Geolocation
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-clock"></i>
+                        Scheduling
+                    </div>
+                </div>
+
+                <!-- Support Section -->
+                <div class="sidebar-group">
+                    <p class="sidebar-title">Support</p>
+                    <div class="nav-item">
+                        <i class="fas fa-question-circle"></i>
+                        Help Center
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-book"></i>
+                        Documentation
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-comments"></i>
+                        Feedback
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-semibold">
+                        JD
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium">John Doe</p>
+                        <p class="text-xs text-gray-500">Pro Plan</p>
+                    </div>
+                    <button class="ml-auto text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <!-- Header -->
+            <header class="flex justify-between items-center p-6 bg-white shadow">
+                <div>
+                    <h2 class="text-2xl font-bold">Dashboard Overview</h2>
+                    <p class="text-sm text-gray-500">Welcome back! Here's your link performance summary</p>
+                </div>
+                <div class="flex items-center">
+                    <div class="relative mr-4">
+                        <input type="text" placeholder="Search..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <button class="bg-primary text-white px-4 py-2 rounded-lg flex items-center mr-4">
+                        <i class="fas fa-plus mr-2"></i> Create New
+                    </button>
+                    <div class="relative mr-4">
+                        <i class="fas fa-bell text-gray-500 text-xl"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </div>
+                    <div class="relative">
+                        <i class="fas fa-envelope text-gray-500 text-xl"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Stats Section -->
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="stats-card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-gray-500">Total Clicks</p>
+                            <h3 class="text-3xl font-bold mt-2">12,458</h3>
+                            <p class="text-green-500 text-sm mt-1"><i class="fas fa-arrow-up mr-1"></i> 12.3%</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                            <i class="fas fa-mouse-pointer text-primary text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-gray-500">Shortened URLs</p>
+                            <h3 class="text-3xl font-bold mt-2">247</h3>
+                            <p class="text-green-500 text-sm mt-1"><i class="fas fa-arrow-up mr-1"></i> 8.2%</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                            <i class="fas fa-link text-secondary text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-gray-500">Active URLs</p>
+                            <h3 class="text-3xl font-bold mt-2">183</h3>
+                            <p class="text-red-500 text-sm mt-1"><i class="fas fa-arrow-down mr-1"></i> 3.1%</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                            <i class="fas fa-chart-line text-yellow-500 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-gray-500">QR Scans</p>
+                            <h3 class="text-3xl font-bold mt-2">3,215</h3>
+                            <p class="text-green-500 text-sm mt-1"><i class="fas fa-arrow-up mr-1"></i> 22.4%</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                            <i class="fas fa-qrcode text-purple-500 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- URL Shortener Form -->
+                <div class="content-card lg:col-span-2">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-xl font-bold">Shorten a URL</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-medium mb-2" for="long-url">
+                                Destination URL
+                            </label>
+                            <input type="text" id="long-url" placeholder="Paste your long URL here" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="custom-path">
+                                    Custom Path (optional)
+                                </label>
+                                <div class="flex">
+                                    <span class="inline-flex items-center px-3 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 rounded-l-md">
+                                        shortlypro.com/
+                                    </span>
+                                    <input type="text" id="custom-path" class="flex-1 block w-full rounded-none rounded-r-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary px-4 py-3" placeholder="custom-path">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="domain">
+                                    Domain
+                                </label>
+                                <select id="domain" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <option>shortlypro.com</option>
+                                    <option>shrt.pro</option>
+                                    <option>mylink.page</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center mt-6">
+                            <div class="flex space-x-2">
+                                <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                    <i class="fas fa-qrcode mr-2"></i> Generate QR Code
+                                </button>
+                                <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                    <i class="fas fa-cog mr-2"></i> Options
+                                </button>
+                            </div>
+                            <button class="bg-primary text-white px-6 py-3 rounded-lg font-medium">
+                                Shorten URL
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscription Status -->
+                <div class="content-card">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-xl font-bold">Subscription Plan</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="bg-premium text-white rounded-lg p-4 mb-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-bold text-lg">Pro Plan</h4>
+                                    <p class="text-amber-100">$9.99/month</p>
+                                </div>
+                                <span class="bg-white text-premium px-2 py-1 rounded text-xs font-bold">Active</span>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3 mb-6">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Billing Cycle</span>
+                                <span class="font-medium">Monthly</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Next Billing</span>
+                                <span class="font-medium">Aug 15, 2023</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">URL Limit</span>
+                                <span class="font-medium">500 URLs</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Team Members</span>
+                                <span class="font-medium">5 Users</span>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full bg-gray-100 text-gray-800 py-2 rounded-lg font-medium hover:bg-gray-200 mb-2">
+                            Upgrade Plan
+                        </button>
+                        <button class="w-full border border-primary text-primary py-2 rounded-lg font-medium hover:bg-blue-50">
+                            Manage Subscription
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent URLs -->
+                <div class="content-card lg:col-span-2">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                        <h3 class="text-xl font-bold">Recent URLs</h3>
+                        <button class="text-primary text-sm font-medium">
+                            View All
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Short URL</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clicks</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <span class="text-primary font-medium">shortlypro.com/abc123</span>
+                                            <button class="ml-2 text-gray-500 hover:text-primary">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                        <div class="text-sm text-gray-500 truncate max-w-xs">https://www.example.com/very/long/url/that/needs/to/be/shortened</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="font-medium">1,243</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        Jun 15, 2023
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            Active
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button class="text-primary mr-3"><i class="fas fa-chart-bar"></i></button>
+                                        <button class="text-gray-600 mr-3"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-500"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <span class="text-primary font-medium">shortlypro.com/x7f9g2</span>
+                                            <button class="ml-2 text-gray-500 hover:text-primary">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                        <div class="text-sm text-gray-500 truncate max-w-xs">https://www.another-example.com/blog/post/title</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="font-medium">842</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        Jun 10, 2023
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            Active
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button class="text-primary mr-3"><i class="fas fa-chart-bar"></i></button>
+                                        <button class="text-gray-600 mr-3"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-500"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <span class="text-primary font-medium">shortlypro.com/qwerty</span>
+                                            <button class="ml-2 text-gray-500 hover:text-primary">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                        <div class="text-sm text-gray-500 truncate max-w-xs">https://www.website.com/products/category/item-name</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="font-medium">0</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        Jun 5, 2023
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                            Inactive
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button class="text-primary mr-3"><i class="fas fa-chart-bar"></i></button>
+                                        <button class="text-gray-600 mr-3"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-500"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- QR Code Generator -->
+                <div class="content-card">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-xl font-bold">QR Code Generator</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="bg-gray-100 rounded-lg p-4 flex items-center justify-center mb-4">
+                            <div class="bg-white p-4">
+                                <div class="w-32 h-32 flex items-center justify-center border border-dashed border-gray-300">
+                                    <span class="text-gray-400">QR Code</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-medium mb-2" for="qr-url">
+                                URL for QR Code
+                            </label>
+                            <input type="text" id="qr-url" placeholder="Enter URL" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="qr-color">
+                                    Color
+                                </label>
+                                <select id="qr-color" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <option>Primary (Blue)</option>
+                                    <option>Black</option>
+                                    <option>Custom</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium mb-2" for="qr-size">
+                                    Size
+                                </label>
+                                <select id="qr-size" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <option>Small</option>
+                                    <option>Medium</option>
+                                    <option>Large</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full bg-primary text-white py-2 rounded-lg font-medium">
+                            Generate QR Code
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Simple copy functionality for demonstration
+        document.querySelectorAll('.fa-copy').forEach(icon => {
+            icon.addEventListener('click', function() {
+                const shortUrl = this.closest('.flex').querySelector('span').textContent;
+                navigator.clipboard.writeText(shortUrl);
+                
+                // Visual feedback
+                const original = this.classList.contains('fa-copy') ? 'fa-copy' : 'fa-check';
+                this.classList.remove(original);
+                this.classList.add('fa-check');
+                this.style.color = '#10B981';
+                
+                setTimeout(() => {
+                    this.classList.remove('fa-check');
+                    this.classList.add(original);
+                    this.style.color = '';
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>

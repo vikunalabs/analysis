@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collapsible Sidebar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        dark: '#1F2937',
+                        premium: '#F59E0B',
+                        lightblue: '#EFF6FF',
+                        lightgreen: '#ECFDF5',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .submenu {
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .rotate-90 {
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex h-screen">
+    <!-- Collapsible Sidebar -->
+    <aside class="w-64 bg-white shadow-md flex flex-col">
+        <div class="p-6 border-b">
+            <h1 class="text-2xl font-bold text-primary">
+                <i class="fas fa-link mr-2"></i>ShortlyPro
+            </h1>
+            <p class="text-xs text-gray-500 mt-1">Premium URL Management</p>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto pt-4">
+            <!-- Main Navigation -->
+            <div class="mb-4">
+                <div class="flex items-center px-6 py-3 text-primary bg-lightblue border-l-4 border-primary">
+                    <i class="fas fa-home w-5 mr-3"></i>
+                    Dashboard
+                </div>
+                <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+                    <i class="fas fa-link w-5 mr-3"></i>
+                    My URLs
+                </div>
+                <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+                    <i class="fas fa-chart-bar w-5 mr-3"></i>
+                    Analytics
+                </div>
+            </div>
+
+            <!-- Content Management Section -->
+            <div class="sidebar-section mb-4">
+                <div class="sidebar-header flex items-center justify-between px-6 py-3 text-gray-600 hover:bg-gray-50 cursor-pointer" data-target="content-menu">
+                    <div class="flex items-center">
+                        <i class="fas fa-file-alt w-5 mr-3"></i>
+                        <span>Content</span>
+                    </div>
+                    <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                </div>
+                <div id="content-menu" class="submenu hidden">
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-qrcode w-5 mr-3"></i>
+                        QR Codes
+                    </div>
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-barcode w-5 mr-3"></i>
+                        Barcodes
+                    </div>
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-file-alt w-5 mr-3"></i>
+                        Landing Pages
+                    </div>
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-pencil-alt w-5 mr-3"></i>
+                        Bio Profiles
+                    </div>
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-font w-5 mr-3"></i>
+                        Custom Domains
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Management Section -->
+            <div class="sidebar-section mb-4">
+                <div class="sidebar-header flex items-center justify-between px-6 py-3 text-gray-600 hover:bg-gray-50 cursor-pointer" data-target="account-menu">
+                    <div class="flex items-center">
+                        <i class="fas fa-user w-5 mr-3"></i>
+                        <span>Account</span>
+                    </div>
+                    <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                </div>
+                <div id="account-menu" class="submenu hidden">
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-user-circle w-5 mr-3"></i>
+                        Profile
+                    </div>
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-users w-5 mr-3"></i>
+                        Team Management
+                    </div>
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-shield-alt w-5 mr-3"></i>
+                        Security
+                    </div>
+                </div>
+            </div>
+
+            <!-- Billing Section -->
+            <div class="sidebar-section mb-4">
+                <div class="sidebar-header flex items-center justify-between px-6 py-3 text-gray-600 hover:bg-gray-50 cursor-pointer" data-target="billing-menu">
+                    <div class="flex items-center">
+                        <i class="fas fa-credit-card w-5 mr-3"></i>
+                        <span>Billing</span>
+                    </div>
+                    <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                </div>
+                <div id="billing-menu" class="submenu hidden">
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-crown w-5 mr-3"></i>
+                        Subscription
+                    </div>
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-money-bill-wave w-5 mr-3"></i>
+                        Payments
+                    </div>
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-file-invoice-dollar w-5 mr-3"></i>
+                        Invoices
+                    </div>
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-receipt w-5 mr-3"></i>
+                        Billing History
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Features Section -->
+            <div class="sidebar-section mb-4">
+                <div class="sidebar-header flex items-center justify-between px-6 py-3 text-gray-600 hover:bg-gray-50 cursor-pointer" data-target="features-menu">
+                    <div class="flex items-center">
+                        <i class="fas fa-star w-5 mr-3"></i>
+                        <span>Features</span>
+                    </div>
+                    <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                </div>
+                <div id="features-menu" class="submenu hidden">
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-bullhorn w-5 mr-3"></i>
+                        Campaigns
+                    </div>
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-map-marker-alt w-5 mr-3"></i>
+                        Geolocation
+                    </div>
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-clock w-5 mr-3"></i>
+                        Scheduling
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support Section -->
+            <div class="sidebar-section mb-4">
+                <div class="sidebar-header flex items-center justify-between px-6 py-3 text-gray-600 hover:bg-gray-50 cursor-pointer" data-target="support-menu">
+                    <div class="flex items-center">
+                        <i class="fas fa-question-circle w-5 mr-3"></i>
+                        <span>Support</span>
+                    </div>
+                    <i class="fas fa-chevron-down text-xs transition-transform"></i>
+                </div>
+                <div id="support-menu" class="submenu hidden">
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-life-ring w-5 mr-3"></i>
+                        Help Center
+                    </div>
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-book w-5 mr-3"></i>
+                        Documentation
+                    </div>
+                    <div class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 pl-12">
+                        <i class="fas fa-comments w-5 mr-3"></i>
+                        Feedback
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-gray-200">
+            <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-semibold">
+                    JD
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium">John Doe</p>
+                    <p class="text-xs text-gray-500">Pro Plan</p>
+                </div>
+                <button class="ml-auto text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area (Placeholder) -->
+    <main class="flex-1 overflow-y-auto p-8">
+        <div class="bg-white rounded-xl shadow p-8 text-center">
+            <i class="fas fa-link text-5xl text-primary mb-4"></i>
+            <h2 class="text-2xl font-bold text-gray-700 mb-2">URL Shortener Dashboard</h2>
+            <p class="text-gray-500 mb-6">Main content area - Copy your dashboard content here</p>
+            <div class="bg-gray-100 rounded-lg p-4 max-w-md mx-auto">
+                <p class="text-sm text-gray-500">Placeholder for your dashboard components</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarHeaders = document.querySelectorAll('.sidebar-header');
+            
+            sidebarHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const targetMenu = document.getElementById(targetId);
+                    const chevron = this.querySelector('.fa-chevron-down');
+                    
+                    // Close all other menus
+                    document.querySelectorAll('.submenu').forEach(menu => {
+                        if (menu.id !== targetId) {
+                            menu.classList.add('hidden');
+                            menu.previousElementSibling.querySelector('.fa-chevron-down').classList.remove('rotate-90');
+                        }
+                    });
+                    
+                    // Toggle current menu
+                    targetMenu.classList.toggle('hidden');
+                    chevron.classList.toggle('rotate-90');
+                });
+            });
+            
+            // Auto-expand the first section for better UX
+            const firstSection = document.querySelector('.sidebar-section');
+            if (firstSection) {
+                const firstTarget = firstSection.querySelector('.sidebar-header').getAttribute('data-target');
+                const firstMenu = document.getElementById(firstTarget);
+                const firstChevron = firstSection.querySelector('.fa-chevron-down');
+                
+                firstMenu.classList.remove('hidden');
+                firstChevron.classList.add('rotate-90');
+            }
+        });
+    </script>
+</body>
+</html>
